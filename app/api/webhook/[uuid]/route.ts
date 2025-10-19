@@ -16,7 +16,10 @@ async function handleWebhook(request: NextRequest, context: RouteContext) {
     const method = request.method
     const headers: Record<string, string> = {}
     request.headers.forEach((value, key) => {
-      headers[key] = value
+      // Filter out x-vercel-* headers
+      if (!key.toLowerCase().startsWith('x-vercel-')) {
+        headers[key] = value
+      }
     })
 
     // Parse query params
