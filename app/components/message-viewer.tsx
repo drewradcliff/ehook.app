@@ -223,7 +223,9 @@ export function MessageViewer({ event, onDelete }: MessageViewerProps) {
                       {key}:
                     </span>
                     <span className="font-mono flex-1 break-all">
-                      {String(value)}
+                      {typeof value === "object" && value !== null
+                        ? JSON.stringify(value)
+                        : String(value)}
                     </span>
                   </div>
                 ))}
