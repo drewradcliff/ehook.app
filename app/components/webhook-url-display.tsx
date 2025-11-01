@@ -17,7 +17,7 @@ export function WebhookUrlDisplay({ uuid, status }: WebhookUrlDisplayProps) {
   const webhookUrl = `${
     typeof window !== "undefined" ? window.location.origin : ""
   }/api/webhook/${uuid}`
-  const emailAddress = `${uuid}@ehook.app`
+  const emailAddress = `${uuid}@live.ehook.app`
 
   const copyWebhookToClipboard = async () => {
     try {

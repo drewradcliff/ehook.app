@@ -24,13 +24,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Extract UUID from the recipient email address (UUID@ehook.app)
+    // Extract UUID from the recipient email address (UUID@live.ehook.app)
     const recipientEmail = payload.email.recipient
     const uuid = recipientEmail.split("@")[0]
 
-    console.log("recipientEmail", recipientEmail)
-
-    if (!uuid || !recipientEmail.includes("@ehook.app")) {
+    if (!uuid || !recipientEmail.includes("@live.ehook.app")) {
       return NextResponse.json(
         { success: false, error: "Invalid recipient email" },
         { status: 400 }
