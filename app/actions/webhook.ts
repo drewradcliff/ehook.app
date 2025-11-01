@@ -5,18 +5,30 @@ import { redis } from "@/lib/redis"
 export type WebhookEvent = {
   id: string
   uuid: string
+  type?: "webhook" | "email"
   method: string
   url: string
   headers: Record<string, unknown>
   body: any
   query: Record<string, unknown>
   timestamp: number
+  from?: string
+  to?: string
+  subject?: string
+  emailHtml?: string
+  emailText?: string
+  attachments?: Array<{
+    filename: string
+    contentType: string
+    size: number
+    url?: string
+  }>
 }
 
 export async function getWebhookEvents(uuid: string): Promise<WebhookEvent[]> {
   try {
     const redisKey = `webhook:${uuid}:events`
-    
+
     // Get all events from sorted set (most recent first)
     const events = await redis.zrange(redisKey, 0, -1, {
       rev: true,
@@ -36,13 +48,16 @@ export async function getWebhookEvents(uuid: string): Promise<WebhookEvent[]> {
   }
 }
 
-export async function deleteWebhookEvent(uuid: string, eventId: string): Promise<boolean> {
+export async function deleteWebhookEvent(
+  uuid: string,
+  eventId: string
+): Promise<boolean> {
   try {
     const redisKey = `webhook:${uuid}:events`
-    
+
     // Get all events to find the one to delete
     const events = await redis.zrange(redisKey, 0, -1)
-    
+
     for (const event of events) {
       const parsedEvent = typeof event === "string" ? JSON.parse(event) : event
       if (parsedEvent.id === eventId) {
@@ -51,7 +66,7 @@ export async function deleteWebhookEvent(uuid: string, eventId: string): Promise
         return true
       }
     }
-    
+
     return false
   } catch (error) {
     console.error("Error deleting webhook event:", error)
@@ -69,4 +84,3 @@ export async function deleteAllWebhookEvents(uuid: string): Promise<boolean> {
     return false
   }
 }
-
