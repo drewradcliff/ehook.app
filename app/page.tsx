@@ -18,7 +18,9 @@ const STORAGE_KEY = "ehook-webhook-uuid"
 export default function Home() {
   const [uuid, setUuid] = useState<string>("")
   const [selectedEvent, setSelectedEvent] = useState<WebhookEvent | null>(null)
-  const [status, setStatus] = useState<"connecting" | "connected" | "reconnecting" | "disconnected">("connecting")
+  const [status, setStatus] = useState<
+    "connecting" | "connected" | "reconnecting" | "disconnected"
+  >("connecting")
   const [unreadCount, setUnreadCount] = useState(0)
   const [showSettings, setShowSettings] = useState(false)
 
@@ -98,17 +100,24 @@ export default function Home() {
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={70}>
-            <div className="p-4 border-b">
-              <WebhookUrlDisplay uuid={uuid} status={status} />
+            <div className="flex flex-col h-full">
+              <div className="p-4 border-b flex-shrink-0">
+                <WebhookUrlDisplay uuid={uuid} status={status} />
+              </div>
+              <div className="flex-1 overflow-hidden">
+                {showSettings ? (
+                  <SettingsPanel
+                    uuid={uuid}
+                    onClose={() => setShowSettings(false)}
+                  />
+                ) : (
+                  <MessageViewer
+                    event={selectedEvent}
+                    onDelete={() => setSelectedEvent(null)}
+                  />
+                )}
+              </div>
             </div>
-            {showSettings ? (
-              <SettingsPanel uuid={uuid} onClose={() => setShowSettings(false)} />
-            ) : (
-              <MessageViewer
-                event={selectedEvent}
-                onDelete={() => setSelectedEvent(null)}
-              />
-            )}
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
