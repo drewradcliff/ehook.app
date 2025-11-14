@@ -8,7 +8,11 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { X } from "lucide-react"
-import { saveWebhookSettings, getWebhookSettings, type WebhookSettings } from "@/app/actions/settings"
+import {
+  saveWebhookSettings,
+  getWebhookSettings,
+  type WebhookSettings,
+} from "@/app/actions/settings"
 
 const SETTINGS_KEY = "ehook-settings"
 
@@ -53,12 +57,12 @@ export function SettingsPanel({ uuid, onClose }: SettingsPanelProps) {
   const saveSettings = async () => {
     // Save to localStorage
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
-    
+
     // Save to server if we have a UUID
     if (uuid) {
       await saveWebhookSettings(uuid, settings)
     }
-    
+
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -66,12 +70,12 @@ export function SettingsPanel({ uuid, onClose }: SettingsPanelProps) {
   const resetSettings = async () => {
     setSettings(DEFAULT_SETTINGS)
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(DEFAULT_SETTINGS))
-    
+
     // Save to server if we have a UUID
     if (uuid) {
       await saveWebhookSettings(uuid, DEFAULT_SETTINGS)
     }
-    
+
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -125,7 +129,10 @@ export function SettingsPanel({ uuid, onClose }: SettingsPanelProps) {
             type="number"
             value={settings.responseStatus}
             onChange={(e) =>
-              setSettings({ ...settings, responseStatus: parseInt(e.target.value) || 200 })
+              setSettings({
+                ...settings,
+                responseStatus: parseInt(e.target.value) || 200,
+              })
             }
             className="font-mono"
           />
@@ -142,7 +149,9 @@ export function SettingsPanel({ uuid, onClose }: SettingsPanelProps) {
           <textarea
             id="body"
             value={settings.responseBody}
-            onChange={(e) => setSettings({ ...settings, responseBody: e.target.value })}
+            onChange={(e) =>
+              setSettings({ ...settings, responseBody: e.target.value })
+            }
             className="w-full min-h-[200px] p-3 border bg-background font-mono text-sm"
             placeholder='{"success": true}'
           />
@@ -156,7 +165,7 @@ export function SettingsPanel({ uuid, onClose }: SettingsPanelProps) {
         {/* Response Headers */}
         <div className="space-y-3">
           <Label>Custom Response Headers</Label>
-          
+
           {Object.entries(settings.responseHeaders).length > 0 && (
             <div className="space-y-2 mb-4">
               {Object.entries(settings.responseHeaders).map(([key, value]) => (
@@ -216,4 +225,3 @@ export function SettingsPanel({ uuid, onClose }: SettingsPanelProps) {
     </ScrollArea>
   )
 }
-

@@ -8,9 +8,27 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { getWebhookEvents, deleteAllWebhookEvents, deleteWebhookEvent, type WebhookEvent } from "@/app/actions/webhook"
+import {
+  getWebhookEvents,
+  deleteAllWebhookEvents,
+  deleteWebhookEvent,
+  type WebhookEvent,
+} from "@/app/actions/webhook"
 import { RealtimeEvents } from "@/lib/realtime"
-import { Trash2, Search, Webhook, CreditCard, Github, MessageSquare, ShoppingCart, Phone, Mail, Globe, Code, Settings } from "lucide-react"
+import {
+  Trash2,
+  Search,
+  Webhook,
+  CreditCard,
+  Github,
+  MessageSquare,
+  ShoppingCart,
+  Phone,
+  Mail,
+  Globe,
+  Code,
+  Settings,
+} from "lucide-react"
 import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
 
@@ -18,14 +36,25 @@ type InboxProps = {
   uuid: string
   onSelectEvent: (event: WebhookEvent) => void
   selectedEventId: string | null
-  onStatusChange: (status: "connecting" | "connected" | "reconnecting" | "disconnected") => void
+  onStatusChange: (
+    status: "connecting" | "connected" | "reconnecting" | "disconnected"
+  ) => void
   onNewEvent?: () => void
   onEventsChange?: () => void
   onOpenSettings?: () => void
   showSettings?: boolean
 }
 
-export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, onNewEvent, onEventsChange, onOpenSettings, showSettings }: InboxProps) {
+export function Inbox({
+  uuid,
+  onSelectEvent,
+  selectedEventId,
+  onStatusChange,
+  onNewEvent,
+  onEventsChange,
+  onOpenSettings,
+  showSettings,
+}: InboxProps) {
   const [events, setEvents] = useState<WebhookEvent[]>([])
   const [searchQuery, setSearchQuery] = useState("")
 
@@ -66,7 +95,11 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
   }, [uuid])
 
   const handleDeleteAll = async () => {
-    if (!confirm(`Are you sure you want to delete all ${events.length} webhooks? This cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete all ${events.length} webhooks? This cannot be undone.`
+      )
+    ) {
       return
     }
     await deleteAllWebhookEvents(uuid)
@@ -80,7 +113,7 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
     await deleteWebhookEvent(uuid, eventId)
     setEvents((prev) => prev.filter((event) => event.id !== eventId))
     toast.success("Webhook deleted")
-    
+
     // If deleting the selected event, clear selection
     if (selectedEventId === eventId) {
       onEventsChange?.()
@@ -91,21 +124,23 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // CMD/CTRL + K to focus search
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault()
-        const searchInput = document.querySelector('input[placeholder="Search events..."]') as HTMLInputElement
+        const searchInput = document.querySelector(
+          'input[placeholder="Search events..."]'
+        ) as HTMLInputElement
         searchInput?.focus()
       }
-      
+
       // CMD/CTRL + , to open settings
-      if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+      if ((e.metaKey || e.ctrlKey) && e.key === ",") {
         e.preventDefault()
         onOpenSettings?.()
       }
     }
 
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
+    window.addEventListener("keydown", handleKeyPress)
+    return () => window.removeEventListener("keydown", handleKeyPress)
   }, [onOpenSettings])
 
   // Filter events based on search query
@@ -133,14 +168,24 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
 
       // Search in body
       if (event.body) {
-        const bodyString = typeof event.body === "string"
-          ? event.body.toLowerCase()
-          : JSON.stringify(event.body).toLowerCase()
+        const bodyString =
+          typeof event.body === "string"
+            ? event.body.toLowerCase()
+            : JSON.stringify(event.body).toLowerCase()
         if (bodyString.includes(query)) return true
       }
 
       // Search in ID
       if (event.id.toLowerCase().includes(query)) return true
+
+      // Search in email-specific fields
+      if (event.type === "email") {
+        if (event.from?.toLowerCase().includes(query)) return true
+        if (event.to?.toLowerCase().includes(query)) return true
+        if (event.subject?.toLowerCase().includes(query)) return true
+        if (event.emailText?.toLowerCase().includes(query)) return true
+        if (event.emailHtml?.toLowerCase().includes(query)) return true
+      }
 
       return false
     })
@@ -172,6 +217,12 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
   }
 
   const getPreview = (event: WebhookEvent) => {
+    // For email events, show the subject
+    if (event.type === "email" && event.subject) {
+      return event.subject
+    }
+
+    // For webhook events, show the body
     if (event.body) {
       if (typeof event.body === "string") {
         return event.body.substring(0, 50)
@@ -182,6 +233,11 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
   }
 
   const getWebhookIcon = (event: WebhookEvent) => {
+    // Email events get a mail icon
+    if (event.type === "email") {
+      return <Mail className="h-4 w-4 text-blue-500" />
+    }
+
     const headers = event.headers
     const headersLower = Object.keys(headers).reduce((acc, key) => {
       acc[key.toLowerCase()] = headers[key]
@@ -189,49 +245,67 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
     }, {} as Record<string, unknown>)
 
     // Stripe
-    if (headersLower['stripe-signature'] || headersLower['x-stripe-signature']) {
+    if (
+      headersLower["stripe-signature"] ||
+      headersLower["x-stripe-signature"]
+    ) {
       return <CreditCard className="h-4 w-4 text-purple-500" />
     }
 
     // GitHub
-    if (headersLower['x-github-event'] || headersLower['x-github-delivery']) {
+    if (headersLower["x-github-event"] || headersLower["x-github-delivery"]) {
       return <Github className="h-4 w-4 text-gray-800" />
     }
 
     // Slack
-    if (headersLower['x-slack-signature'] || headersLower['x-slack-request-timestamp']) {
+    if (
+      headersLower["x-slack-signature"] ||
+      headersLower["x-slack-request-timestamp"]
+    ) {
       return <MessageSquare className="h-4 w-4 text-purple-600" />
     }
 
     // Shopify
-    if (headersLower['x-shopify-topic'] || headersLower['x-shopify-hmac-sha256']) {
+    if (
+      headersLower["x-shopify-topic"] ||
+      headersLower["x-shopify-hmac-sha256"]
+    ) {
       return <ShoppingCart className="h-4 w-4 text-green-600" />
     }
 
     // Twilio
-    if (headersLower['x-twilio-signature'] || headersLower['i-twilio-idempotency-token']) {
+    if (
+      headersLower["x-twilio-signature"] ||
+      headersLower["i-twilio-idempotency-token"]
+    ) {
       return <Phone className="h-4 w-4 text-red-500" />
     }
 
     // SendGrid / Mailgun
-    if (headersLower['x-twilio-email-signature'] || headersLower['x-mailgun-signature']) {
+    if (
+      headersLower["x-twilio-email-signature"] ||
+      headersLower["x-mailgun-signature"]
+    ) {
       return <Mail className="h-4 w-4 text-blue-500" />
     }
 
     // Discord
-    if (headersLower['x-signature-ed25519'] || headersLower['x-signature-timestamp']) {
+    if (
+      headersLower["x-signature-ed25519"] ||
+      headersLower["x-signature-timestamp"]
+    ) {
       return <MessageSquare className="h-4 w-4 text-indigo-500" />
     }
 
     // Check for JSON content type
-    const contentType = headersLower['content-type']
-    if (contentType && String(contentType).includes('application/json')) {
+    const contentType = headersLower["content-type"]
+    if (contentType && String(contentType).includes("application/json")) {
       return <Code className="h-4 w-4 text-orange-500" />
     }
 
     // Check user agent for webhook.site or other tools
-    const userAgent = headersLower['user-agent']
-    if (userAgent && String(userAgent).toLowerCase().includes('webhook')) {
+    const userAgent = headersLower["user-agent"]
+    if (userAgent && String(userAgent).toLowerCase().includes("webhook")) {
       return <Globe className="h-4 w-4 text-blue-400" />
     }
 
@@ -243,11 +317,16 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
     <div className="flex flex-col h-full">
       <div className="p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">eHook by <Link href="https://inbound.new" target="_blank">inbound</Link></h2>
+          <h2 className="text-lg font-semibold">
+            eHook by{" "}
+            <Link href="https://inbound.new" target="_blank">
+              inbound
+            </Link>
+          </h2>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onOpenSettings}
               className={showSettings ? "bg-accent" : ""}
             >
@@ -274,7 +353,10 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
 
         <div className="flex items-center justify-between text-sm">
           <p className="text-muted-foreground">
-            {filteredEvents.length} {filteredEvents.length === events.length ? "events" : `of ${events.length} events`}
+            {filteredEvents.length}{" "}
+            {filteredEvents.length === events.length
+              ? "events"
+              : `of ${events.length} events`}
           </p>
           {events.length > 0 && (
             <div className="flex items-center gap-2">
@@ -307,8 +389,9 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
             filteredEvents.map((event, index) => (
               <div key={event.id}>
                 <div
-                  className={`group p-3 cursor-pointer hover:bg-accent transition-colors ${selectedEventId === event.id ? "bg-accent" : ""
-                    }`}
+                  className={`group p-3 cursor-pointer hover:bg-accent transition-colors ${
+                    selectedEventId === event.id ? "bg-accent" : ""
+                  }`}
                   onClick={() => onSelectEvent(event)}
                 >
                   <div className="flex items-start gap-3">
@@ -317,7 +400,11 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <Badge className={`${getMethodColor(event.method)} text-white text-xs`}>
+                        <Badge
+                          className={`${getMethodColor(
+                            event.method
+                          )} text-white text-xs`}
+                        >
                           {event.method}
                         </Badge>
                         <div className="flex items-center gap-2">
@@ -349,4 +436,3 @@ export function Inbox({ uuid, onSelectEvent, selectedEventId, onStatusChange, on
     </div>
   )
 }
-
