@@ -1,0 +1,39 @@
+---
+alwaysApply: true
+---
+
+# UI Components
+
+When adding new UI components, always use shadcn/ui components.
+
+## Installing shadcn Components
+
+To add a new shadcn component, use:
+
+```bash
+bunx --bun shadcn@latest add <component-name>
+```
+
+Note: This project uses Bun as the package manager. Always use `bunx --bun` for running shadcn CLI.
+
+## Available Components
+
+Check available components at: https://ui.shadcn.com/docs/components
+
+## Component Guidelines
+
+- Always import shadcn components from `@/components/ui/*`
+- Use Tailwind CSS for styling (already configured)
+- Follow the existing component patterns in the codebase
+- Prefer composition over custom implementations
+
+## Examples
+
+```typescript
+// Good - using shadcn
+import { Button } from "@/components/ui/button"
+import { DropdownMenu } from "@/components/ui/dropdown-menu"
+
+// Bad - custom implementation when shadcn exists
+import CustomButton from "./custom-button"
+```

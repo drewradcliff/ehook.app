@@ -8,6 +8,13 @@ import {
 } from "@/app/actions/webhook"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -21,6 +28,7 @@ import {
   Globe,
   Mail,
   MessageSquare,
+  MoreVertical,
   Phone,
   Search,
   Settings,
@@ -317,45 +325,54 @@ export function Inbox({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="space-y-3 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onOpenSettings}
-              className={showSettings ? "bg-accent" : ""}
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-            {events.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={handleDeleteAll}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
+      <div className="space-y-2 p-2">
+        <div className="flex items-center gap-1">
+          <div className="relative flex-1">
+            <Search className="text-muted-foreground absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 transform" />
+            <Input
+              type="text"
+              placeholder="Search events..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-8 pr-2 pl-8"
+            />
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onOpenSettings}>
+                <Settings className="h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              {events.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={handleDeleteAll}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete All
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        <div className="relative">
-          <Search className="text-muted-foreground absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 transform" />
-          <Input
-            type="text"
-            placeholder="Search events..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <p className="text-muted-foreground">
+        <div className="flex items-center justify-between gap-2 px-1 text-sm">
+          <p className="text-muted-foreground text-xs">
             {filteredEvents.length}{" "}
             {filteredEvents.length === events.length
               ? "events"
-              : `of ${events.length} events`}
+              : `of ${events.length}`}
           </p>
           {events.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {Object.entries(
                 events.reduce(
                   (acc, e) => {
@@ -365,7 +382,7 @@ export function Inbox({
                   {} as Record<string, number>,
                 ),
               ).map(([method, count]) => (
-                <Badge key={method} variant="outline" className="text-xs">
+                <Badge key={method} variant="outline" className="h-5 text-xs">
                   {method}: {count}
                 </Badge>
               ))}
