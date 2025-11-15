@@ -1,8 +1,8 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 
 export default function SchedulesPage() {
   return (
@@ -32,4 +32,3 @@ export default function SchedulesPage() {
     </SidebarInset>
   )
 }
-

@@ -5,6 +5,8 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
+import { Separator } from "@/components/ui/separator"
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { useEffect, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 import { type WebhookEvent } from "./actions/webhook"
@@ -66,15 +68,22 @@ export default function Home() {
 
   if (!uuid) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
+      <SidebarInset>
+        <div className="flex h-screen items-center justify-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </SidebarInset>
     )
   }
 
   return (
-    <div className="flex h-screen w-full flex-col">
-      <div className="flex-1 overflow-hidden">
+    <SidebarInset>
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+        <SidebarTrigger />
+        <Separator orientation="vertical" />
+        <h1 className="text-lg font-semibold">Events</h1>
+      </header>
+      <div className="flex flex-1 flex-col overflow-hidden">
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
             <Inbox
@@ -121,6 +130,6 @@ export default function Home() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
-    </div>
+    </SidebarInset>
   )
 }
