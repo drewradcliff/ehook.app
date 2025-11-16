@@ -36,7 +36,11 @@ export function AppSidebar() {
         <div className="px-2 py-2">
           <h2 className="text-lg font-semibold">
             eHook by{" "}
-            <Link href="https://inbound.new" target="_blank">
+            <Link
+              href="https://inbound.new"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               inbound
             </Link>
           </h2>

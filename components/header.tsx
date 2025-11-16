@@ -1,3 +1,4 @@
+import { ReactNode } from "react"
 import { Separator } from "./ui/separator"
 import { SidebarTrigger } from "./ui/sidebar"
 
@@ -6,7 +7,7 @@ export function Header({
   actions,
 }: {
   title: string
-  actions?: React.ReactNode
+  actions?: ReactNode
 }) {
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b px-4">

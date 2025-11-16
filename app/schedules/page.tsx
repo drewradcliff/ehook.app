@@ -339,7 +339,7 @@ export default function SchedulesPage() {
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 aria-invalid={Boolean(fieldErrors.name?.length)}
-                placeholder="Customer sync"
+                placeholder="my-schedule"
               />
               <FieldError errors={fieldErrors.name} />
             </div>
