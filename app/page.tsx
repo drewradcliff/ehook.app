@@ -1,12 +1,12 @@
 "use client"
 
+import { Header } from "@/components/header"
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
-import { Separator } from "@/components/ui/separator"
-import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarInset } from "@/components/ui/sidebar"
 import { useEffect, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 import { type WebhookEvent } from "./actions/webhook"
@@ -78,11 +78,7 @@ export default function Home() {
 
   return (
     <SidebarInset>
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-        <SidebarTrigger />
-        <Separator orientation="vertical" />
-        <h1 className="text-lg font-semibold">Events</h1>
-      </header>
+      <Header title="Events" />
       <div className="flex flex-1 flex-col overflow-hidden">
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
