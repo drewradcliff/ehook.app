@@ -5,7 +5,14 @@ import { z } from "zod"
 import { qstash } from "@/lib/qstash"
 
 const scheduleSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters").max(64),
+  name: z
+    .string()
+    .min(3, "Name must be at least 3 characters")
+    .max(64)
+    .regex(
+      /^[a-zA-Z0-9._-]+$/,
+      "Name must be alphanumeric, hyphen, underscore, or period",
+    ),
   destination: z.url("Enter a valid URL"),
   method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
   cron: z.string().min(5, "Cron expression is required"),
