@@ -77,9 +77,9 @@ export default function Home() {
   }
 
   return (
-    <SidebarInset>
+    <SidebarInset className="overflow-hidden">
       <Header title="Events" />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col">
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
             <Inbox
