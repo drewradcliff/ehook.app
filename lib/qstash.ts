@@ -1,9 +1,9 @@
 import { Client } from "@upstash/qstash"
 
-const token = process.env.UPSTASH_QSTASH_TOKEN
+const token = process.env.QSTASH_TOKEN
 
 if (!token) {
-  throw new Error("Missing UPSTASH_QSTASH_TOKEN environment variable")
+  throw new Error("Missing QSTASH_TOKEN environment variable")
 }
 
 export const qstash = new Client({
