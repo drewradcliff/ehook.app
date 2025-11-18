@@ -48,6 +48,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - **Unique Webhook URLs**: Each user gets a unique webhook URL that persists across sessions
 - **Real-time Updates**: See webhook events appear instantly using Upstash Realtime
 - **All HTTP Methods**: Accepts GET, POST, PUT, DELETE, PATCH, OPTIONS, and HEAD requests
+- **Temporary Email Testing**: Inspect webhook payloads generated from temporary/disposable email addresses
 - **Beautiful UI**: Built with shadcn/ui components and Tailwind CSS
 - **Syntax Highlighting**: JSON payloads are displayed with syntax highlighting
 - **History**: Last 50 webhook events are stored and can be reviewed
