@@ -131,3 +131,44 @@ export async function deleteSchedule(
     }
   }
 }
+
+export type TriggerScheduleResult =
+  | { success: true }
+  | { success: false; error: string }
+
+export async function triggerSchedule(
+  schedule: Schedule,
+): Promise<TriggerScheduleResult> {
+  try {
+    const headers: Record<string, string> = {}
+    let normalizedBody: string | undefined
+
+    if (schedule.body && schedule.body.trim().length > 0) {
+      try {
+        const parsedBody = JSON.parse(schedule.body)
+        normalizedBody = JSON.stringify(parsedBody)
+        headers["Content-Type"] = "application/json"
+      } catch {
+        return {
+          success: false,
+          error: "Invalid body format",
+        }
+      }
+    }
+
+    await qstash.publish({
+      url: schedule.destination,
+      method: schedule.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
+      body: normalizedBody,
+      headers: Object.keys(headers).length ? headers : undefined,
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error triggering schedule:", error)
+    return {
+      success: false,
+      error: "Failed to trigger webhook. Please try again.",
+    }
+  }
+}

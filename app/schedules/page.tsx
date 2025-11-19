@@ -1,7 +1,7 @@
 "use client"
 
 import { format } from "date-fns"
-import { Plus, Trash2 } from "lucide-react"
+import { Play, Plus, Trash2 } from "lucide-react"
 import type { FormEvent } from "react"
 import { useEffect, useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -11,6 +11,7 @@ import {
   createSchedule,
   deleteSchedule,
   listSchedules,
+  triggerSchedule,
 } from "@/app/actions/schedules"
 import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
@@ -144,6 +145,22 @@ export default function SchedulesPage() {
           )
         } else {
           toast.error("Failed to delete schedule", {
+            description: result.error,
+          })
+        }
+      })
+    })
+  }
+
+  const handleTrigger = (schedule: Schedule) => {
+    startTransition(() => {
+      triggerSchedule(schedule).then((result) => {
+        if (result.success) {
+          toast.success("Webhook triggered", {
+            description: `Sent ${schedule.method} request to ${schedule.destination}`,
+          })
+        } else {
+          toast.error("Failed to trigger webhook", {
             description: result.error,
           })
         }
@@ -299,19 +316,31 @@ export default function SchedulesPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleDelete(
-                              schedule.scheduleId,
-                              schedule.label || "Untitled",
-                            )
-                          }
-                          disabled={isPending}
-                        >
-                          <Trash2 className="text-destructive size-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleTrigger(schedule)}
+                            disabled={isPending}
+                            title="Trigger webhook now"
+                          >
+                            <Play className="size-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handleDelete(
+                                schedule.scheduleId,
+                                schedule.label || "Untitled",
+                              )
+                            }
+                            disabled={isPending}
+                            title="Delete schedule"
+                          >
+                            <Trash2 className="text-destructive size-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
