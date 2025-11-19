@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { SidebarInset } from "@/components/ui/sidebar"
-import { Textarea } from "@/components/ui/textarea"
+import { Editor } from "@monaco-editor/react"
 
 const INTERVAL_OPTIONS = [
   { value: "minutes", singular: "minute", plural: "minutes", min: 1, max: 59 },
@@ -413,13 +413,30 @@ export default function SchedulesPage() {
 
             <div className="space-y-2">
               <Label htmlFor="body">JSON body (optional)</Label>
-              <Textarea
-                id="body"
+              <Editor
+                className="border"
+                height="100px"
+                defaultLanguage="json"
                 value={body}
-                onChange={(event) => setBody(event.target.value)}
-                aria-invalid={Boolean(fieldErrors.body?.length)}
-                placeholder='{"status":"ok"}'
-                disabled={isBodyDisabled}
+                onChange={(value) => setBody(value ?? "")}
+                options={{
+                  overviewRulerLanes: 0,
+                  readOnly: isBodyDisabled,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  fontSize: 13,
+                  lineNumbers: "on",
+                  folding: true,
+                  wordWrap: "on",
+                  automaticLayout: true,
+                  contextmenu: true,
+                  find: {
+                    addExtraSpaceOnTop: false,
+                    autoFindInSelection: "never",
+                    seedSearchStringFromSelection: "never",
+                  },
+                }}
+                theme="vs"
               />
               {isBodyDisabled && (
                 <p className="text-muted-foreground text-xs">
