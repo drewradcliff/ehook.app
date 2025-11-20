@@ -1,43 +1,50 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
-import Link from "next/link"
-import { useRealtime } from "@upstash/realtime/client"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import {
-  getWebhookEvents,
   deleteAllWebhookEvents,
   deleteWebhookEvent,
+  getWebhookEvents,
   type WebhookEvent,
 } from "@/app/actions/webhook"
-import { RealtimeEvents } from "@/lib/realtime"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
-  Trash2,
-  Search,
-  Webhook,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { RealtimeEvents } from "@/lib/realtime"
+import { useRealtime } from "@upstash/realtime/client"
+import { formatDistanceToNow } from "date-fns"
+import {
+  Code,
   CreditCard,
   Github,
-  MessageSquare,
-  ShoppingCart,
-  Phone,
-  Mail,
   Globe,
-  Code,
+  Mail,
+  MessageSquare,
+  MoreVertical,
+  Phone,
+  Search,
   Settings,
+  ShoppingCart,
+  Trash2,
+  Webhook,
 } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
-import { formatDistanceToNow } from "date-fns"
 
 type InboxProps = {
   uuid: string
   onSelectEvent: (event: WebhookEvent) => void
   selectedEventId: string | null
   onStatusChange: (
-    status: "connecting" | "connected" | "reconnecting" | "disconnected"
+    status: "connecting" | "connected" | "reconnecting" | "disconnected",
   ) => void
   onNewEvent?: () => void
   onEventsChange?: () => void
@@ -97,7 +104,7 @@ export function Inbox({
   const handleDeleteAll = async () => {
     if (
       !confirm(
-        `Are you sure you want to delete all ${events.length} webhooks? This cannot be undone.`
+        `Are you sure you want to delete all ${events.length} webhooks? This cannot be undone.`,
       )
     ) {
       return
@@ -127,7 +134,7 @@ export function Inbox({
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault()
         const searchInput = document.querySelector(
-          'input[placeholder="Search events..."]'
+          'input[placeholder="Search events..."]',
         ) as HTMLInputElement
         searchInput?.focus()
       }
@@ -239,10 +246,13 @@ export function Inbox({
     }
 
     const headers = event.headers
-    const headersLower = Object.keys(headers).reduce((acc, key) => {
-      acc[key.toLowerCase()] = headers[key]
-      return acc
-    }, {} as Record<string, unknown>)
+    const headersLower = Object.keys(headers).reduce(
+      (acc, key) => {
+        acc[key.toLowerCase()] = headers[key]
+        return acc
+      },
+      {} as Record<string, unknown>,
+    )
 
     // Stripe
     if (
@@ -314,59 +324,65 @@ export function Inbox({
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
-            eHook by{" "}
-            <Link href="https://inbound.new" target="_blank">
-              inbound
-            </Link>
-          </h2>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onOpenSettings}
-              className={showSettings ? "bg-accent" : ""}
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-            {events.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={handleDeleteAll}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
+    <div className="flex h-full flex-col">
+      <div className="space-y-2 p-2">
+        <div className="flex items-center gap-1">
+          <div className="relative flex-1">
+            <Search className="text-muted-foreground absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 transform" />
+            <Input
+              type="text"
+              placeholder="Search events..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-8 pr-2 pl-8"
+            />
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onOpenSettings}>
+                <Settings className="h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              {events.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={handleDeleteAll}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete All
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search events..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <p className="text-muted-foreground">
+        <div className="flex items-center justify-between gap-2 px-1 text-sm">
+          <p className="text-muted-foreground text-xs">
             {filteredEvents.length}{" "}
             {filteredEvents.length === events.length
               ? "events"
-              : `of ${events.length} events`}
+              : `of ${events.length}`}
           </p>
           {events.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {Object.entries(
-                events.reduce((acc, e) => {
-                  acc[e.method] = (acc[e.method] || 0) + 1
-                  return acc
-                }, {} as Record<string, number>)
+                events.reduce(
+                  (acc, e) => {
+                    acc[e.method] = (acc[e.method] || 0) + 1
+                    return acc
+                  },
+                  {} as Record<string, number>,
+                ),
               ).map(([method, count]) => (
-                <Badge key={method} variant="outline" className="text-xs">
+                <Badge key={method} variant="outline" className="h-5 text-xs">
                   {method}: {count}
                 </Badge>
               ))}
@@ -378,50 +394,50 @@ export function Inbox({
       <ScrollArea className="flex-1">
         <div>
           {events.length === 0 ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground p-4 text-center text-sm">
               Waiting for webhooks...
             </div>
           ) : filteredEvents.length === 0 ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground p-4 text-center text-sm">
               No events match your search
             </div>
           ) : (
             filteredEvents.map((event, index) => (
               <div key={event.id}>
                 <div
-                  className={`group p-3 cursor-pointer hover:bg-accent transition-colors ${
+                  className={`group hover:bg-accent cursor-pointer p-3 transition-colors ${
                     selectedEventId === event.id ? "bg-accent" : ""
                   }`}
                   onClick={() => onSelectEvent(event)}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-0.5">
+                    <div className="mt-0.5 flex-shrink-0">
                       {getWebhookIcon(event)}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-center justify-between">
                         <Badge
                           className={`${getMethodColor(
-                            event.method
-                          )} text-white text-xs`}
+                            event.method,
+                          )} text-xs text-white`}
                         >
                           {event.method}
                         </Badge>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-muted-foreground text-xs">
                             {formatTime(event.timestamp)}
                           </span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+                            className="hover:text-destructive h-5 w-5 p-0 opacity-0 transition-opacity group-hover:opacity-100"
                             onClick={(e) => handleDeleteOne(event.id, e)}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-muted-foreground truncate text-xs">
                         {getPreview(event)}
                       </p>
                     </div>

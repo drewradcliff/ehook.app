@@ -1,17 +1,19 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { v4 as uuidv4 } from "uuid"
-import { WebhookUrlDisplay } from "./components/webhook-url-display"
-import { Inbox } from "./components/inbox"
-import { MessageViewer } from "./components/message-viewer"
-import { SettingsPanel } from "./components/settings-panel"
-import { type WebhookEvent } from "./actions/webhook"
+import { Header } from "@/components/header"
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
+import { SidebarInset } from "@/components/ui/sidebar"
+import { useEffect, useState } from "react"
+import { v4 as uuidv4 } from "uuid"
+import { type WebhookEvent } from "./actions/webhook"
+import { Inbox } from "./components/inbox"
+import { MessageViewer } from "./components/message-viewer"
+import { SettingsPanel } from "./components/settings-panel"
+import { WebhookUrlDisplay } from "./components/webhook-url-display"
 
 const STORAGE_KEY = "ehook-webhook-uuid"
 
@@ -66,15 +68,18 @@ export default function Home() {
 
   if (!uuid) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
+      <SidebarInset>
+        <div className="flex h-screen items-center justify-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </SidebarInset>
     )
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      <div className="flex-1 overflow-hidden">
+    <SidebarInset className="overflow-hidden">
+      <Header title="Events" />
+      <div className="flex flex-1 flex-col">
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
             <Inbox
@@ -100,8 +105,8 @@ export default function Home() {
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={70}>
-            <div className="flex flex-col h-full">
-              <div className="p-4 border-b flex-shrink-0">
+            <div className="flex h-full flex-col">
+              <div className="flex-shrink-0 border-b p-4">
                 <WebhookUrlDisplay uuid={uuid} status={status} />
               </div>
               <div className="flex-1 overflow-hidden">
@@ -121,6 +126,6 @@ export default function Home() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
-    </div>
+    </SidebarInset>
   )
 }
