@@ -1,0 +1,39 @@
+{
+  "name": "ehook",
+  "version": "0.1.0",
+  "description": "CLI tool to proxy webhook events to your localhost",
+  "type": "module",
+  "bin": {
+    "ehook": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target node --format esm && chmod +x dist/index.js",
+    "dev": "bun run src/index.ts",
+    "prepublishOnly": "bun run build"
+  },
+  "keywords": [
+    "webhook",
+    "proxy",
+    "localhost",
+    "development",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "eventsource": "^2.0.2",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/eventsource": "^1.1.15",
+    "@types/node": "^20.17.10",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
