@@ -5,7 +5,6 @@ export interface RealtimeClient {
   connect: () => void;
   disconnect: () => void;
   on: (event: 'webhook', handler: (event: WebhookEvent) => void) => void;
-  on: (event: 'connected' | 'disconnected' | 'error', handler: () => void) => void;
 }
 
 export function createRealtimeClient(uuid: string): RealtimeClient {
@@ -18,7 +17,7 @@ export function createRealtimeClient(uuid: string): RealtimeClient {
   };
 
   const connect = () => {
-    const url = `https://www.ehook.app/api/realtime?channel=webhook:${uuid}&event=webhook.received`;
+    const url = `https://www.ehook.app/api/realtime?channels=webhook:${uuid}&event=webhook.received`;
     
     eventSource = new EventSource(url);
 
@@ -28,10 +27,12 @@ export function createRealtimeClient(uuid: string): RealtimeClient {
 
     eventSource.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
-        // The realtime API sends the webhook event in the data field
-        if (data && data.id) {
-          emit('webhook', data as WebhookEvent);
+        const message = JSON.parse(event.data);
+        
+        const webhookEvent = message?.data as WebhookEvent | undefined;
+
+        if (webhookEvent && webhookEvent.id) {
+          emit('webhook', webhookEvent);
         }
       } catch (error) {
         console.error('Error parsing webhook event:', error);
