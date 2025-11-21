@@ -3,9 +3,9 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
-    "dev": "bun --filter web dev",
-    "build": "bun --filter web build",
-    "cli:build": "cd packages/cli && bun run build",
-    "cli:dev": "cd packages/cli && bun run dev"
+    "dev": "bun --cwd packages/web dev",
+    "build": "bun --cwd packages/web build",
+    "cli:build": "bun --cwd packages/cli build",
+    "cli:dev": "bun --cwd packages/cli dev"
   }
 }
