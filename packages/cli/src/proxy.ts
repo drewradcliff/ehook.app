@@ -1,6 +1,6 @@
 import { createRealtimeClient } from './realtime.js';
+import type { ForwardResult, ProxyOptions, WebhookEvent } from './types.js';
 import { logEvent } from './ui.js';
-import type { ProxyOptions, WebhookEvent, ForwardResult } from './types.js';
 
 async function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -21,15 +21,13 @@ async function forwardRequest(
     
     // Add query parameters from the original request
     Object.entries(event.query).forEach(([key, value]) => {
-      url.searchParams.append(key, value);
+      url.searchParams.append(key, String(value));
     });
 
     // Filter out platform-specific headers
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string | string[]> = {};
     Object.entries(event.headers).forEach(([key, value]) => {
-      if (!key.toLowerCase().startsWith('x-vercel-') && 
-          !key.toLowerCase().startsWith('x-forwarded-') &&
-          key.toLowerCase() !== 'host') {
+      if (!key.toLowerCase().startsWith('x-vercel-')) {
         headers[key] = value;
       }
     });
@@ -41,10 +39,10 @@ async function forwardRequest(
     };
 
     // Add body for non-GET requests
-    if (event.method !== 'GET' && event.method !== 'HEAD' && event.body !== null) {
+    if (event.body !== null && event.body !== undefined) {
       if (typeof event.body === 'string') {
         options.body = event.body;
-      } else if (typeof event.body === 'object') {
+      } else {
         options.body = JSON.stringify(event.body);
       }
     }
@@ -83,18 +81,6 @@ export async function startProxy(options: ProxyOptions): Promise<void> {
 
   const client = createRealtimeClient(uuid);
 
-  client.on('connected', () => {
-    // UI will handle this
-  });
-
-  client.on('disconnected', () => {
-    // UI will handle this
-  });
-
-  client.on('error', () => {
-    // UI will handle this
-  });
-
   client.on('webhook', async (event: WebhookEvent) => {
     const result = await forwardRequest(event, targetUrl);
     logEvent(event, result, targetUrl);
@@ -102,16 +88,16 @@ export async function startProxy(options: ProxyOptions): Promise<void> {
 
   client.connect();
 
-  // Handle graceful shutdown
-  process.on('SIGINT', () => {
+  let isShuttingDown = false;
+  const shutdown = () => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
     console.log('\n\nShutting down...');
     client.disconnect();
     process.exit(0);
-  });
+  };
 
-  process.on('SIGTERM', () => {
-    client.disconnect();
-    process.exit(0);
-  });
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
 

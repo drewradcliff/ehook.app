@@ -1,4 +1,4 @@
-import type { ProxyOptions, WebhookEvent, ForwardResult } from './types.js';
+import type { ForwardResult, ProxyOptions, WebhookEvent } from './types.js';
 
 let isInitialized = false;
 
@@ -27,8 +27,6 @@ export function logEvent(
   result: ForwardResult,
   targetUrl: string
 ): void {
-  const timestamp = new Date(event.timestamp).toLocaleTimeString();
-  
   if (result.success) {
     const statusCode = result.statusCode || 0;
     const statusColor = getStatusColor(statusCode);

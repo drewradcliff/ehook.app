@@ -10,6 +10,8 @@ export interface RealtimeClient {
 export function createRealtimeClient(uuid: string): RealtimeClient {
   let eventSource: EventSource | null = null;
   const handlers: Map<string, Function[]> = new Map();
+  let shouldReconnect = true;
+  let reconnnectAttempts = 0;
 
   const emit = (event: string, data?: any) => {
     const eventHandlers = handlers.get(event) || [];
@@ -40,20 +42,26 @@ export function createRealtimeClient(uuid: string): RealtimeClient {
     };
 
     eventSource.onerror = (error) => {
+      if (!shouldReconnect) return;
+
+      reconnnectAttempts++;
+      const delay = Math.min(1000 * Math.pow(2, reconnnectAttempts), 30000);
+
       emit('error');
       emit('disconnected');
-      
+
       // Auto-reconnect after 5 seconds
       setTimeout(() => {
-        if (eventSource) {
+        if (shouldReconnect && eventSource) {
           eventSource.close();
           connect();
         }
-      }, 5000);
+      }, delay);
     };
   };
 
   const disconnect = () => {
+    shouldReconnect = false;
     if (eventSource) {
       eventSource.close();
       eventSource = null;

@@ -1,7 +1,7 @@
 {
   "name": "ehook",
   "version": "0.1.0",
-  "description": "CLI tool to proxy webhook events to your localhost",
+  "description": "eHook CLI",
   "type": "module",
   "bin": {
     "ehook": "./dist/index.js"

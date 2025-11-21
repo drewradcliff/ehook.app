@@ -3,9 +3,9 @@ export interface WebhookEvent {
   uuid: string;
   method: string;
   url: string;
-  headers: Record<string, string>;
+  headers: Record<string, string | string[]>;
   body: any;
-  query: Record<string, string>;
+  query: Record<string, string | string[]>;
   timestamp: number;
 }
 

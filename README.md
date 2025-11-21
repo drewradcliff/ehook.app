@@ -4,7 +4,7 @@ A real-time webhook inspection tool that allows you to view and debug webhook pa
 
 This project uses a Bun workspace monorepo structure:
 - `packages/web/` - Next.js dashboard application
-- `packages/cli/` - CLI tool (coming soon)
+- `packages/cli/` - CLI tool
 
 ## Prerequisites
 
