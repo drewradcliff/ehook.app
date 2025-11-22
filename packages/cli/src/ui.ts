@@ -6,7 +6,7 @@ export function displayUI(options: ProxyOptions): void {
   if (isInitialized) return;
   isInitialized = true;
 
-  const { port, path, uuid } = options;
+  const { port, path = '', uuid } = options;
   const webhookUrl = `https://www.ehook.app/api/webhook/${uuid}`;
   const forwardUrl = `http://localhost:${port}${path}`;
   const dashboardUrl = 'https://www.ehook.app';

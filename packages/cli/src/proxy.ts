@@ -76,7 +76,7 @@ async function forwardRequest(
 }
 
 export async function startProxy(options: ProxyOptions): Promise<void> {
-  const { port, path, uuid } = options;
+  const { port, path = '', uuid } = options;
   const targetUrl = `http://localhost:${port}${path}`;
 
   const client = createRealtimeClient(uuid);
