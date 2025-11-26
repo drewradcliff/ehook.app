@@ -1,6 +1,7 @@
 import type { Edge, EdgeChange, Node, NodeChange } from "@xyflow/react";
 import { applyEdgeChanges, applyNodeChanges } from "@xyflow/react";
 import { atom } from "jotai";
+import { api } from "./api-client";
 
 export type WorkflowNodeType = "trigger" | "action" | "add";
 
@@ -16,7 +17,7 @@ export type WorkflowNodeData = {
 export type WorkflowNode = Node<WorkflowNodeData>;
 export type WorkflowEdge = Edge;
 
-// Atoms for workflow state
+// Atoms for workflow state (now backed by database)
 export const nodesAtom = atom<WorkflowNode[]>([]);
 export const edgesAtom = atom<WorkflowEdge[]>([]);
 export const selectedNodeAtom = atom<string | null>(null);
@@ -49,21 +50,45 @@ export type ExecutionLogEntry = {
 // Map of nodeId -> execution log entry for the currently selected execution
 export const executionLogsAtom = atom<Record<string, ExecutionLogEntry>>({});
 
-// Workflow toolbar UI state atoms
-export const showClearDialogAtom = atom(false);
-export const showDeleteDialogAtom = atom(false);
-export const isSavingAtom = atom(false);
-export const hasUnsavedChangesAtom = atom(false);
-export const workflowNotFoundAtom = atom(false);
+// Autosave functionality
+let autosaveTimeoutId: NodeJS.Timeout | null = null;
+const AUTOSAVE_DELAY = 1000; // 1 second debounce for field typing
 
-// Undo/Redo state
-type HistoryState = {
-  nodes: WorkflowNode[];
-  edges: WorkflowEdge[];
-};
+// Autosave atom that handles saving workflow state
+export const autosaveAtom = atom(
+  null,
+  async (get, set, options?: { immediate?: boolean }) => {
+    const workflowId = get(currentWorkflowIdAtom);
+    const nodes = get(nodesAtom);
+    const edges = get(edgesAtom);
 
-const historyAtom = atom<HistoryState[]>([]);
-const futureAtom = atom<HistoryState[]>([]);
+    // Only autosave if we have a workflow ID
+    if (!workflowId) {
+      return;
+    }
+
+    const saveFunc = async () => {
+      try {
+        await api.workflow.update(workflowId, { nodes, edges });
+        // Clear the unsaved changes indicator after successful save
+        set(hasUnsavedChangesAtom, false);
+      } catch (error) {
+        console.error("Autosave failed:", error);
+      }
+    };
+
+    if (options?.immediate) {
+      // Save immediately (for add/delete/connect operations)
+      await saveFunc();
+    } else {
+      // Debounce for typing operations
+      if (autosaveTimeoutId) {
+        clearTimeout(autosaveTimeoutId);
+      }
+      autosaveTimeoutId = setTimeout(saveFunc, AUTOSAVE_DELAY);
+    }
+  }
+);
 
 // Derived atoms for node/edge operations
 export const onNodesChangeAtom = atom(
@@ -102,21 +127,21 @@ export const onNodesChangeAtom = atom(
       }
     }
 
-    // Check if there were any deletions to mark unsaved changes
+    // Check if there were any deletions to trigger immediate save
     const hadDeletions = filteredChanges.some(
       (change) => change.type === "remove"
     );
     if (hadDeletions) {
-      set(hasUnsavedChangesAtom, true);
+      set(autosaveAtom, { immediate: true });
       return;
     }
 
-    // Check if there were any position changes (node moved) to mark unsaved changes
+    // Check if there were any position changes (node moved) to trigger debounced save
     const hadPositionChanges = filteredChanges.some(
       (change) => change.type === "position" && change.dragging === false
     );
     if (hadPositionChanges) {
-      set(hasUnsavedChangesAtom, true);
+      set(autosaveAtom); // Debounced save
     }
   }
 );
@@ -143,10 +168,10 @@ export const onEdgesChangeAtom = atom(
       }
     }
 
-    // Check if there were any deletions to mark unsaved changes
+    // Check if there were any deletions to trigger immediate save
     const hadDeletions = changes.some((change) => change.type === "remove");
     if (hadDeletions) {
-      set(hasUnsavedChangesAtom, true);
+      set(autosaveAtom, { immediate: true });
     }
   }
 );
@@ -170,6 +195,9 @@ export const addNodeAtom = atom(null, (get, set, node: WorkflowNode) => {
 
   // Mark as having unsaved changes
   set(hasUnsavedChangesAtom, true);
+
+  // Trigger immediate autosave
+  set(autosaveAtom, { immediate: true });
 });
 
 export const updateNodeDataAtom = atom(
@@ -177,10 +205,38 @@ export const updateNodeDataAtom = atom(
   (get, set, { id, data }: { id: string; data: Partial<WorkflowNodeData> }) => {
     const currentNodes = get(nodesAtom);
 
+    // Check if label is being updated
+    const oldNode = currentNodes.find((node) => node.id === id);
+    const oldLabel = oldNode?.data.label;
+    const newLabel = data.label;
+    const isLabelChange = newLabel !== undefined && oldLabel !== newLabel;
+
     const newNodes = currentNodes.map((node) => {
       if (node.id === id) {
+        // Update the node itself
         return { ...node, data: { ...node.data, ...data } };
       }
+
+      // If label changed, update all templates in other nodes that reference this node
+      if (isLabelChange && oldLabel) {
+        const updatedConfig = updateTemplatesInConfig(
+          node.data.config || {},
+          id,
+          oldLabel,
+          newLabel
+        );
+
+        if (updatedConfig !== node.data.config) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              config: updatedConfig,
+            },
+          };
+        }
+      }
+
       return node;
     });
 
@@ -189,9 +245,62 @@ export const updateNodeDataAtom = atom(
     // Mark as having unsaved changes (except for status updates during execution)
     if (!data.status) {
       set(hasUnsavedChangesAtom, true);
+      // Trigger debounced autosave (for typing)
+      set(autosaveAtom);
     }
   }
 );
+
+// Helper function to update templates in a config object when a node label changes
+function updateTemplatesInConfig(
+  config: Record<string, unknown>,
+  nodeId: string,
+  oldLabel: string,
+  newLabel: string
+): Record<string, unknown> {
+  let hasChanges = false;
+  const updated: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(config)) {
+    if (typeof value === "string") {
+      // Update template references to this node
+      // Pattern: {{@nodeId:OldLabel}} or {{@nodeId:OldLabel.field}}
+      const pattern = new RegExp(
+        `\\{\\{@${escapeRegex(nodeId)}:${escapeRegex(oldLabel)}(\\.[^}]+)?\\}\\}`,
+        "g"
+      );
+      const newValue = value.replace(pattern, (_match, fieldPart) => {
+        hasChanges = true;
+        return `{{@${nodeId}:${newLabel}${fieldPart || ""}}}`;
+      });
+      updated[key] = newValue;
+    } else if (
+      typeof value === "object" &&
+      value !== null &&
+      !Array.isArray(value)
+    ) {
+      const nestedUpdated = updateTemplatesInConfig(
+        value as Record<string, unknown>,
+        nodeId,
+        oldLabel,
+        newLabel
+      );
+      if (nestedUpdated !== value) {
+        hasChanges = true;
+      }
+      updated[key] = nestedUpdated;
+    } else {
+      updated[key] = value;
+    }
+  }
+
+  return hasChanges ? updated : config;
+}
+
+// Helper to escape special regex characters
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 export const deleteNodeAtom = atom(null, (get, set, nodeId: string) => {
   const currentNodes = get(nodesAtom);
@@ -222,6 +331,9 @@ export const deleteNodeAtom = atom(null, (get, set, nodeId: string) => {
 
   // Mark as having unsaved changes
   set(hasUnsavedChangesAtom, true);
+
+  // Trigger immediate autosave
+  set(autosaveAtom, { immediate: true });
 });
 
 export const deleteEdgeAtom = atom(null, (get, set, edgeId: string) => {
@@ -241,6 +353,9 @@ export const deleteEdgeAtom = atom(null, (get, set, edgeId: string) => {
 
   // Mark as having unsaved changes
   set(hasUnsavedChangesAtom, true);
+
+  // Trigger immediate autosave
+  set(autosaveAtom, { immediate: true });
 });
 
 export const deleteSelectedItemsAtom = atom(null, (get, set) => {
@@ -282,6 +397,9 @@ export const deleteSelectedItemsAtom = atom(null, (get, set) => {
 
   // Mark as having unsaved changes
   set(hasUnsavedChangesAtom, true);
+
+  // Trigger immediate autosave
+  set(autosaveAtom, { immediate: true });
 });
 
 export const clearWorkflowAtom = atom(null, (get, set) => {
@@ -301,6 +419,65 @@ export const clearWorkflowAtom = atom(null, (get, set) => {
   set(hasUnsavedChangesAtom, true);
 });
 
+// Load workflow from database
+export const loadWorkflowAtom = atom(null, async (_get, set) => {
+  try {
+    set(isLoadingAtom, true);
+    const workflow = await api.workflow.getCurrent();
+    set(nodesAtom, workflow.nodes);
+    set(edgesAtom, workflow.edges);
+    if (workflow.id) {
+      set(currentWorkflowIdAtom, workflow.id);
+    }
+  } catch (error) {
+    console.error("Failed to load workflow:", error);
+  } finally {
+    set(isLoadingAtom, false);
+  }
+});
+
+// Save workflow with a name
+export const saveWorkflowAsAtom = atom(
+  null,
+  async (
+    get,
+    _set,
+    { name, description }: { name: string; description?: string }
+  ) => {
+    const nodes = get(nodesAtom);
+    const edges = get(edgesAtom);
+
+    try {
+      const workflow = await api.workflow.create({
+        name,
+        description,
+        nodes,
+        edges,
+      });
+      return workflow;
+    } catch (error) {
+      console.error("Failed to save workflow:", error);
+      throw error;
+    }
+  }
+);
+
+// Workflow toolbar UI state atoms
+export const showClearDialogAtom = atom(false);
+export const showDeleteDialogAtom = atom(false);
+export const isSavingAtom = atom(false);
+export const hasUnsavedChangesAtom = atom(false);
+export const workflowNotFoundAtom = atom(false);
+
+// Undo/Redo state
+type HistoryState = {
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+};
+
+const historyAtom = atom<HistoryState[]>([]);
+const futureAtom = atom<HistoryState[]>([]);
+
 // Undo atom
 export const undoAtom = atom(null, (get, set) => {
   const history = get(historyAtom);
@@ -319,7 +496,7 @@ export const undoAtom = atom(null, (get, set) => {
   const newHistory = [...history];
   const previousState = newHistory.pop();
   if (!previousState) {
-    return;
+    return; // No history to undo
   }
   set(historyAtom, newHistory);
   set(nodesAtom, previousState.nodes);
@@ -347,7 +524,7 @@ export const redoAtom = atom(null, (get, set) => {
   const newFuture = [...future];
   const nextState = newFuture.pop();
   if (!nextState) {
-    return;
+    return; // No future to redo
   }
   set(futureAtom, newFuture);
   set(nodesAtom, nextState.nodes);
@@ -370,4 +547,3 @@ export const clearNodeStatusesAtom = atom(null, (get, set) => {
   }));
   set(nodesAtom, newNodes);
 });
-

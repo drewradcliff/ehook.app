@@ -1,8 +1,8 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import type { NodeProps } from "@xyflow/react";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 type AddNodeData = {
   onClick?: () => void;

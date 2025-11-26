@@ -1,18 +1,5 @@
 "use client";
 
-import type { NodeProps } from "@xyflow/react";
-import {
-  Check,
-  Code,
-  Database,
-  GitBranch,
-  Mail,
-  MessageSquare,
-  XCircle,
-  Zap,
-  Globe,
-} from "lucide-react";
-import { memo } from "react";
 import {
   Node,
   NodeDescription,
@@ -20,6 +7,19 @@ import {
 } from "@/components/ai-elements/node";
 import { cn } from "@/lib/utils";
 import type { WorkflowNodeData } from "@/lib/workflow-store";
+import type { NodeProps } from "@xyflow/react";
+import {
+  Check,
+  Code,
+  Database,
+  GitBranch,
+  Globe,
+  Mail,
+  MessageSquare,
+  XCircle,
+  Zap,
+} from "lucide-react";
+import { memo } from "react";
 
 // Status badge component
 const StatusBadge = ({

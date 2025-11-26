@@ -1,10 +1,5 @@
 "use client";
 
-import type { Edge, Node, XYPosition } from "@xyflow/react";
-import { useAtomValue, useSetAtom } from "jotai";
-import { Link2Off, Plus, Trash2 } from "lucide-react";
-import { nanoid } from "nanoid";
-import { useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import {
   addNodeAtom,
@@ -14,6 +9,11 @@ import {
   selectedNodeAtom,
   type WorkflowNode,
 } from "@/lib/workflow-store";
+import type { Edge, Node, XYPosition } from "@xyflow/react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { Link2Off, Plus, Trash2 } from "lucide-react";
+import { nanoid } from "nanoid";
+import { useCallback, useEffect, useRef } from "react";
 
 export type ContextMenuType = "node" | "edge" | "pane" | null;
 

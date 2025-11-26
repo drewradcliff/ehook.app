@@ -1,11 +1,11 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/db";
 import { workflows } from "@/db/schema";
 import { desc } from "drizzle-orm";
+import { Clock, GitBranch, Plus } from "lucide-react";
 import Link from "next/link";
-import { Plus, GitBranch, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 export default async function WorkflowsPage() {
   const allWorkflows = await db

@@ -1,5 +1,9 @@
 "use client";
 
+import { Canvas } from "@/components/ai-elements/canvas";
+import { Connection } from "@/components/ai-elements/connection";
+import { Controls } from "@/components/ai-elements/controls";
+import { WorkflowToolbar } from "@/components/workflow/workflow-toolbar";
 import {
   ConnectionMode,
   MiniMap,
@@ -11,16 +15,10 @@ import {
   type Connection as XYFlowConnection,
   type Edge as XYFlowEdge,
 } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas } from "@/components/ai-elements/canvas";
-import { Connection } from "@/components/ai-elements/connection";
-import { Controls } from "@/components/ai-elements/controls";
-import { WorkflowToolbar } from "@/components/workflow/workflow-toolbar";
-import "@xyflow/react/dist/style.css";
 
-import { PlayCircle, Zap } from "lucide-react";
-import { nanoid } from "nanoid";
 import {
   addNodeAtom,
   currentWorkflowIdAtom,
@@ -39,6 +37,8 @@ import {
   type WorkflowNode,
   type WorkflowNodeType,
 } from "@/lib/workflow-store";
+import { PlayCircle, Zap } from "lucide-react";
+import { nanoid } from "nanoid";
 import { Edge } from "../ai-elements/edge";
 import { Panel } from "../ai-elements/panel";
 import { ActionNode } from "./nodes/action-node";

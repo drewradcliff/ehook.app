@@ -1,13 +1,5 @@
 "use client";
 
-import { useReactFlow } from "@xyflow/react";
-import { useAtom, useSetAtom } from "jotai";
-import {
-  Plus,
-  Redo2,
-  Undo2,
-} from "lucide-react";
-import { nanoid } from "nanoid";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
@@ -21,6 +13,14 @@ import {
   undoAtom,
   type WorkflowNode,
 } from "@/lib/workflow-store";
+import { useReactFlow } from "@xyflow/react";
+import { useAtom, useSetAtom } from "jotai";
+import {
+  Plus,
+  Redo2,
+  Undo2,
+} from "lucide-react";
+import { nanoid } from "nanoid";
 import { Panel } from "../ai-elements/panel";
 
 type WorkflowToolbarProps = {
