@@ -410,7 +410,7 @@ const ACTION_CATEGORIES = {
   System: ["HTTP Request", "Database Query", "Condition"],
   AI: ["Generate Text"],
   Web: ["Scrape", "Search"],
-  Resend: ["Send Email"],
+  Inbound: ["Send Email"],
   Slack: ["Send Slack Message"],
 } as const;
 
@@ -487,10 +487,10 @@ export function ActionConfig({
                   <span>AI</span>
                 </div>
               </SelectItem>
-              <SelectItem value="Resend">
+              <SelectItem value="Inbound">
                 <div className="flex items-center gap-2">
                   <span>📧</span>
-                  <span>Resend</span>
+                  <span>Inbound</span>
                 </div>
               </SelectItem>
               <SelectItem value="Slack">

@@ -39,6 +39,7 @@ import {
   RefreshCw,
   Trash2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Panel } from "../ai-elements/panel";
@@ -180,12 +181,12 @@ const response = await fetch("${config?.endpoint || "https://api.example.com"}",
 const data = await response.json();`;
 
       case "Send Email":
-        return `// Send Email via Resend
-import { Resend } from "resend";
+        return `// Send Email via Inbound
+import { Inbound } from "@inboundemail/sdk";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const inbound = new Inbound(process.env.INBOUND_API_KEY);
 
-await resend.emails.send({
+await inbound.emails.send({
   from: "noreply@example.com",
   to: "${config?.emailTo || "user@example.com"}",
   subject: "${config?.emailSubject || "Subject"}",
@@ -270,6 +271,7 @@ export async function ${functionName}(input?: unknown) {
 }
 
 export const PanelInner = () => {
+  const router = useRouter();
   const [selectedNodeId] = useAtom(selectedNodeAtom);
   const [selectedEdgeId] = useAtom(selectedEdgeAtom);
   const [nodes] = useAtom(nodesAtom);
@@ -284,12 +286,13 @@ export const PanelInner = () => {
   const deleteEdge = useSetAtom(deleteEdgeAtom);
   const deleteSelectedItems = useSetAtom(deleteSelectedItemsAtom);
   const setShowClearDialog = useSetAtom(showClearDialogAtom);
-  const setShowDeleteDialog = useSetAtom(showDeleteDialogAtom);
+  const [showDeleteDialog, setShowDeleteDialog] = useAtom(showDeleteDialogAtom);
   const clearNodeStatuses = useSetAtom(clearNodeStatusesAtom);
   const [showDeleteNodeAlert, setShowDeleteNodeAlert] = useState(false);
   const [showDeleteEdgeAlert, setShowDeleteEdgeAlert] = useState(false);
   const [showDeleteRunsAlert, setShowDeleteRunsAlert] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isDeletingWorkflow, setIsDeletingWorkflow] = useState(false);
   const [activeTab, setActiveTab] = useAtom(propertiesPanelActiveTabAtom);
   const refreshRunsRef = useRef<(() => Promise<void>) | null>(null);
   const selectedNode = nodes.find((node) => node.id === selectedNodeId);
@@ -391,7 +394,7 @@ export const PanelInner = () => {
     if (currentWorkflowId) {
       try {
         await fetch(`/api/workflows/${currentWorkflowId}`, {
-          method: "PUT",
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: newName, nodes, edges }),
         });
@@ -413,6 +416,33 @@ export const PanelInner = () => {
       toast.error("Failed to refresh runs");
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const handleDeleteWorkflow = async () => {
+    if (!currentWorkflowId) {
+      return;
+    }
+
+    setIsDeletingWorkflow(true);
+    try {
+      const response = await fetch(`/api/workflows/${currentWorkflowId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setShowDeleteDialog(false);
+        toast.success("Workflow deleted");
+        router.push("/workflows");
+      } else {
+        const error = await response.json();
+        toast.error(error.message || "Failed to delete workflow");
+      }
+    } catch (error) {
+      console.error("Failed to delete workflow:", error);
+      toast.error("Failed to delete workflow");
+    } finally {
+      setIsDeletingWorkflow(false);
     }
   };
 
@@ -631,6 +661,32 @@ export const PanelInner = () => {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={handleDeleteAllRuns}>
                 Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog
+          onOpenChange={setShowDeleteDialog}
+          open={showDeleteDialog}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Workflow</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete &quot;{currentWorkflowName}&quot;? This action
+                cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeletingWorkflow}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={isDeletingWorkflow}
+                onClick={handleDeleteWorkflow}
+              >
+                {isDeletingWorkflow ? "Deleting..." : "Delete"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -18,6 +18,7 @@ import {
 } from "@/lib/workflow-store";
 import { ReactFlowProvider } from "@xyflow/react";
 import { useSetAtom } from "jotai";
+import { useRouter } from "next/navigation";
 import { use, useEffect } from "react";
 
 type WorkflowPageProps = {
@@ -25,6 +26,7 @@ type WorkflowPageProps = {
 };
 
 function WorkflowEditor({ workflowId }: { workflowId: string }) {
+  const router = useRouter();
   const setNodes = useSetAtom(nodesAtom);
   const setEdges = useSetAtom(edgesAtom);
   const setCurrentWorkflowId = useSetAtom(currentWorkflowIdAtom);
@@ -32,6 +34,12 @@ function WorkflowEditor({ workflowId }: { workflowId: string }) {
   const setHasUnsavedChanges = useSetAtom(hasUnsavedChangesAtom);
 
   useEffect(() => {
+    // Redirect to workflows page if someone navigates to /workflows/new directly
+    if (workflowId === "new") {
+      router.replace("/workflows");
+      return;
+    }
+
     const loadWorkflow = async () => {
       try {
         const response = await fetch(`/api/workflows/${workflowId}`);
@@ -63,43 +71,18 @@ function WorkflowEditor({ workflowId }: { workflowId: string }) {
           setCurrentWorkflowName(workflow.name || "Untitled Workflow");
           setHasUnsavedChanges(false);
         } else if (response.status === 404) {
-          // Workflow not found - set default empty state
-          setNodes([]);
-          setEdges([]);
-          setCurrentWorkflowId(workflowId);
-          setCurrentWorkflowName("Untitled Workflow");
-          setHasUnsavedChanges(false);
+          // Workflow not found - redirect to workflows list
+          router.replace("/workflows");
         }
       } catch (error) {
         console.error("Failed to load workflow:", error);
       }
     };
 
-    // Handle "new" workflow
-    if (workflowId === "new") {
-      setNodes([
-        {
-          id: "trigger-1",
-          type: "trigger",
-          position: { x: 250, y: 200 },
-          data: {
-            label: "Manual",
-            description: "Trigger",
-            type: "trigger",
-            config: { triggerType: "Manual" },
-            status: "idle",
-          },
-        },
-      ]);
-      setEdges([]);
-      setCurrentWorkflowId(null);
-      setCurrentWorkflowName("New Workflow");
-      setHasUnsavedChanges(false);
-    } else {
-      loadWorkflow();
-    }
+    loadWorkflow();
   }, [
     workflowId,
+    router,
     setNodes,
     setEdges,
     setCurrentWorkflowId,

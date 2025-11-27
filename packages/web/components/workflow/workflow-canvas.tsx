@@ -21,6 +21,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   addNodeAtom,
+  autosaveAtom,
   currentWorkflowIdAtom,
   edgesAtom,
   hasUnsavedChangesAtom,
@@ -91,6 +92,7 @@ export function WorkflowCanvas() {
   const setSelectedEdge = useSetAtom(selectedEdgeAtom);
   const addNode = useSetAtom(addNodeAtom);
   const setHasUnsavedChanges = useSetAtom(hasUnsavedChangesAtom);
+  const triggerAutosave = useSetAtom(autosaveAtom);
   const { screenToFlowPosition, fitView, getViewport, setViewport } =
     useReactFlow();
 
@@ -231,8 +233,10 @@ export function WorkflowCanvas() {
       };
       setEdges([...edges, newEdge]);
       setHasUnsavedChanges(true);
+      // Trigger immediate autosave when nodes are connected
+      triggerAutosave({ immediate: true });
     },
-    [edges, setEdges, setHasUnsavedChanges]
+    [edges, setEdges, setHasUnsavedChanges, triggerAutosave]
   );
 
   const onNodeClick: NodeMouseHandler = useCallback(
@@ -365,6 +369,8 @@ export function WorkflowCanvas() {
         };
         setEdges([...edges, newEdge]);
         setHasUnsavedChanges(true);
+        // Trigger immediate autosave for the new edge
+        triggerAutosave({ immediate: true });
 
         // Set flag to prevent immediate deselection
         justCreatedNodeFromConnection.current = true;
@@ -385,6 +391,7 @@ export function WorkflowCanvas() {
       setNodes,
       setSelectedNode,
       setHasUnsavedChanges,
+      triggerAutosave,
     ]
   );
 

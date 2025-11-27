@@ -73,7 +73,7 @@ const getProviderLogo = (actionType: string) => {
 // Helper to get integration name from action type
 const getIntegrationFromActionType = (actionType: string): string => {
   const integrationMap: Record<string, string> = {
-    "Send Email": "Email",
+    "Send Email": "Inbound",
     "Send Slack Message": "Slack",
     "HTTP Request": "HTTP",
     "Database Query": "Database",

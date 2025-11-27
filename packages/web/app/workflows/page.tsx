@@ -1,11 +1,11 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/db";
 import { workflows } from "@/db/schema";
 import { desc } from "drizzle-orm";
-import { Clock, GitBranch, Plus } from "lucide-react";
+import { Clock, GitBranch } from "lucide-react";
 import Link from "next/link";
+import { CreateWorkflowButton } from "./create-workflow-button";
 
 export default async function WorkflowsPage() {
   const allWorkflows = await db
@@ -23,12 +23,7 @@ export default async function WorkflowsPage() {
               Create and manage automated workflows
             </p>
           </div>
-          <Button asChild>
-            <Link href="/workflows/new">
-              <Plus className="mr-2 size-4" />
-              New Workflow
-            </Link>
-          </Button>
+          <CreateWorkflowButton />
         </div>
 
         {allWorkflows.length === 0 ? (
@@ -38,12 +33,7 @@ export default async function WorkflowsPage() {
             <CardDescription className="mb-6 text-center">
               Create your first workflow to automate tasks with triggers and actions.
             </CardDescription>
-            <Button asChild>
-              <Link href="/workflows/new">
-                <Plus className="mr-2 size-4" />
-                Create Workflow
-              </Link>
-            </Button>
+            <CreateWorkflowButton />
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

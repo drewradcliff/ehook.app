@@ -48,8 +48,8 @@ const actions: ActionType[] = [
   {
     id: "Send Email",
     label: "Send Email",
-    description: "Send an email via Resend",
-    category: "Resend",
+    description: "Send an email via Inbound",
+    category: "Inbound",
     icon: Mail,
   },
   {
