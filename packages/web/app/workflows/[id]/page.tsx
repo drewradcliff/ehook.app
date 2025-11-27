@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { NodeConfigPanel } from "@/components/workflow/node-config-panel";
 import { WorkflowCanvas } from "@/components/workflow/workflow-canvas";
 import {
   currentWorkflowIdAtom,
@@ -31,15 +37,17 @@ function WorkflowEditor({ workflowId }: { workflowId: string }) {
         const response = await fetch(`/api/workflows/${workflowId}`);
         if (response.ok) {
           const workflow = await response.json();
-          
+
           // Parse nodes and edges from JSON if needed
-          const parsedNodes: WorkflowNode[] = typeof workflow.nodes === 'string' 
-            ? JSON.parse(workflow.nodes) 
-            : (workflow.nodes || []);
-          const parsedEdges: WorkflowEdge[] = typeof workflow.edges === 'string' 
-            ? JSON.parse(workflow.edges) 
-            : (workflow.edges || []);
-          
+          const parsedNodes: WorkflowNode[] =
+            typeof workflow.nodes === "string"
+              ? JSON.parse(workflow.nodes)
+              : workflow.nodes || [];
+          const parsedEdges: WorkflowEdge[] =
+            typeof workflow.edges === "string"
+              ? JSON.parse(workflow.edges)
+              : workflow.edges || [];
+
           // Reset all node statuses to idle when loading
           const nodesWithIdleStatus = parsedNodes.map((node: WorkflowNode) => ({
             ...node,
@@ -90,11 +98,26 @@ function WorkflowEditor({ workflowId }: { workflowId: string }) {
     } else {
       loadWorkflow();
     }
-  }, [workflowId, setNodes, setEdges, setCurrentWorkflowId, setCurrentWorkflowName, setHasUnsavedChanges]);
+  }, [
+    workflowId,
+    setNodes,
+    setEdges,
+    setCurrentWorkflowId,
+    setCurrentWorkflowName,
+    setHasUnsavedChanges,
+  ]);
 
   return (
     <div className="flex h-dvh w-full flex-col overflow-hidden">
-      <WorkflowCanvas />
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel defaultSize={70} minSize={40}>
+          <WorkflowCanvas />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
+          <NodeConfigPanel />
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }
