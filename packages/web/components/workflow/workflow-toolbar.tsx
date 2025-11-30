@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { Panel } from "../ai-elements/panel";
+import { WorkflowSelector } from "./workflow-selector";
 
 type WorkflowToolbarProps = {
   workflowId?: string;
@@ -112,9 +113,7 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
         className="flex flex-col gap-2 rounded-none border-none bg-transparent p-0 lg:flex-row lg:items-center"
         position="top-left"
       >
-        <div className="flex h-9 items-center overflow-hidden rounded-md border bg-secondary text-secondary-foreground px-3">
-          <p className="font-medium text-sm">Workflow Editor</p>
-        </div>
+        <WorkflowSelector />
       </Panel>
 
       <div className="pointer-events-auto absolute top-4 right-4 z-10">

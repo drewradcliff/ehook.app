@@ -1,25 +1,25 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api-client";
-import { Loader2, Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Button } from "@/components/ui/button"
+import { api } from "@/lib/api-client"
+import { Loader2, Plus } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 type CreateWorkflowButtonProps = {
-  variant?: "default" | "outline" | "ghost";
-  className?: string;
-};
+  variant?: "default" | "outline" | "ghost"
+  className?: string
+}
 
 export function CreateWorkflowButton({
   variant = "default",
   className,
 }: CreateWorkflowButtonProps) {
-  const router = useRouter();
-  const [isCreating, setIsCreating] = useState(false);
+  const router = useRouter()
+  const [isCreating, setIsCreating] = useState(false)
 
   const handleCreateWorkflow = async () => {
-    setIsCreating(true);
+    setIsCreating(true)
     try {
       // Create workflow with a default trigger node
       const newWorkflow = await api.workflow.create({
@@ -40,15 +40,16 @@ export function CreateWorkflowButton({
           },
         ],
         edges: [],
-      });
+      })
 
       // Navigate to the new workflow
-      router.push(`/workflows/${newWorkflow.id}`);
+      router.push(`/workflows/${newWorkflow.id}`)
     } catch (error) {
-      console.error("Failed to create workflow:", error);
-      setIsCreating(false);
+      console.error("Failed to create workflow:", error)
+    } finally {
+      setIsCreating(false)
     }
-  };
+  }
 
   return (
     <Button
@@ -64,6 +65,5 @@ export function CreateWorkflowButton({
       )}
       {isCreating ? "Creating..." : "New Workflow"}
     </Button>
-  );
+  )
 }
-
