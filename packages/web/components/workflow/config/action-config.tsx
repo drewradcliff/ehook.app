@@ -1,29 +1,29 @@
-"use client";
+"use client"
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import {
   currentWorkflowIdAtom,
   currentWorkflowNameAtom,
-} from "@/lib/workflow-store";
-import { useAtom } from "jotai";
-import { Settings } from "lucide-react";
-import { useEffect, useState } from "react";
-import { SchemaBuilder, type SchemaField } from "./schema-builder";
+} from "@/lib/workflow-store"
+import { useAtom } from "jotai"
+import { Settings } from "lucide-react"
+import { useEffect, useState } from "react"
+import { SchemaBuilder, type SchemaField } from "./schema-builder"
 
 type ActionConfigProps = {
-  config: Record<string, unknown>;
-  onUpdateConfig: (key: string, value: string) => void;
-  disabled: boolean;
-};
+  config: Record<string, unknown>
+  onUpdateConfig: (key: string, value: string) => void
+  disabled: boolean
+}
 
 // Send Email fields component
 function SendEmailFields({
@@ -31,9 +31,9 @@ function SendEmailFields({
   onUpdateConfig,
   disabled,
 }: {
-  config: Record<string, unknown>;
-  onUpdateConfig: (key: string, value: string) => void;
-  disabled: boolean;
+  config: Record<string, unknown>
+  onUpdateConfig: (key: string, value: string) => void
+  disabled: boolean
 }) {
   return (
     <>
@@ -75,7 +75,7 @@ function SendEmailFields({
         />
       </div>
     </>
-  );
+  )
 }
 
 // Send Slack Message fields component
@@ -84,9 +84,9 @@ function SendSlackMessageFields({
   onUpdateConfig,
   disabled,
 }: {
-  config: Record<string, unknown>;
-  onUpdateConfig: (key: string, value: string) => void;
-  disabled: boolean;
+  config: Record<string, unknown>
+  onUpdateConfig: (key: string, value: string) => void
+  disabled: boolean
 }) {
   return (
     <>
@@ -116,7 +116,7 @@ function SendSlackMessageFields({
         />
       </div>
     </>
-  );
+  )
 }
 
 // Database Query fields component
@@ -125,9 +125,9 @@ function DatabaseQueryFields({
   onUpdateConfig,
   disabled,
 }: {
-  config: Record<string, unknown>;
-  onUpdateConfig: (key: string, value: string) => void;
-  disabled: boolean;
+  config: Record<string, unknown>
+  onUpdateConfig: (key: string, value: string) => void
+  disabled: boolean
 }) {
   return (
     <>
@@ -162,7 +162,7 @@ function DatabaseQueryFields({
         />
       </div>
     </>
-  );
+  )
 }
 
 // HTTP Request fields component
@@ -171,10 +171,17 @@ function HttpRequestFields({
   onUpdateConfig,
   disabled,
 }: {
-  config: Record<string, unknown>;
-  onUpdateConfig: (key: string, value: string) => void;
-  disabled: boolean;
+  config: Record<string, unknown>
+  onUpdateConfig: (key: string, value: string) => void
+  disabled: boolean
 }) {
+  // Initialize httpMethod to POST if not set
+  useEffect(() => {
+    if (!config?.httpMethod) {
+      onUpdateConfig("httpMethod", "POST")
+    }
+  }, [config?.httpMethod, onUpdateConfig])
+
   return (
     <>
       <div className="space-y-2">
@@ -236,7 +243,7 @@ function HttpRequestFields({
         )}
       </div>
     </>
-  );
+  )
 }
 
 // Generate Text fields component
@@ -245,9 +252,9 @@ function GenerateTextFields({
   onUpdateConfig,
   disabled,
 }: {
-  config: Record<string, unknown>;
-  onUpdateConfig: (key: string, value: string) => void;
-  disabled: boolean;
+  config: Record<string, unknown>
+  onUpdateConfig: (key: string, value: string) => void
+  disabled: boolean
 }) {
   return (
     <>
@@ -313,7 +320,7 @@ function GenerateTextFields({
         </div>
       )}
     </>
-  );
+  )
 }
 
 // Condition fields component
@@ -322,9 +329,9 @@ function ConditionFields({
   onUpdateConfig,
   disabled,
 }: {
-  config: Record<string, unknown>;
-  onUpdateConfig: (key: string, value: string) => void;
-  disabled: boolean;
+  config: Record<string, unknown>
+  onUpdateConfig: (key: string, value: string) => void
+  disabled: boolean
 }) {
   return (
     <div className="space-y-2">
@@ -341,7 +348,7 @@ function ConditionFields({
         use @ to reference previous node outputs.
       </p>
     </div>
-  );
+  )
 }
 
 // Scrape fields component
@@ -350,9 +357,9 @@ function ScrapeFields({
   onUpdateConfig,
   disabled,
 }: {
-  config: Record<string, unknown>;
-  onUpdateConfig: (key: string, value: string) => void;
-  disabled: boolean;
+  config: Record<string, unknown>
+  onUpdateConfig: (key: string, value: string) => void
+  disabled: boolean
 }) {
   return (
     <div className="space-y-2">
@@ -365,7 +372,7 @@ function ScrapeFields({
         value={(config?.url as string) || ""}
       />
     </div>
-  );
+  )
 }
 
 // Search fields component
@@ -374,9 +381,9 @@ function SearchFields({
   onUpdateConfig,
   disabled,
 }: {
-  config: Record<string, unknown>;
-  onUpdateConfig: (key: string, value: string) => void;
-  disabled: boolean;
+  config: Record<string, unknown>
+  onUpdateConfig: (key: string, value: string) => void
+  disabled: boolean
 }) {
   return (
     <>
@@ -402,7 +409,7 @@ function SearchFields({
         />
       </div>
     </>
-  );
+  )
 }
 
 // Action categories and their actions
@@ -412,50 +419,50 @@ const ACTION_CATEGORIES = {
   Web: ["Scrape", "Search"],
   Inbound: ["Send Email"],
   Slack: ["Send Slack Message"],
-} as const;
+} as const
 
-type ActionCategory = keyof typeof ACTION_CATEGORIES;
+type ActionCategory = keyof typeof ACTION_CATEGORIES
 
 // Get category for an action type
 const getCategoryForAction = (actionType: string): ActionCategory | null => {
   for (const [category, actions] of Object.entries(ACTION_CATEGORIES)) {
     if (actions.includes(actionType as never)) {
-      return category as ActionCategory;
+      return category as ActionCategory
     }
   }
-  return null;
-};
+  return null
+}
 
 export function ActionConfig({
   config,
   onUpdateConfig,
   disabled,
 }: ActionConfigProps) {
-  const [_workflowId] = useAtom(currentWorkflowIdAtom);
-  const [_workflowName] = useAtom(currentWorkflowNameAtom);
+  const [_workflowId] = useAtom(currentWorkflowIdAtom)
+  const [_workflowName] = useAtom(currentWorkflowNameAtom)
 
-  const actionType = (config?.actionType as string) || "";
-  const selectedCategory = actionType ? getCategoryForAction(actionType) : null;
+  const actionType = (config?.actionType as string) || ""
+  const selectedCategory = actionType ? getCategoryForAction(actionType) : null
   const [category, setCategory] = useState<ActionCategory | "">(
-    selectedCategory || ""
-  );
+    selectedCategory || "",
+  )
 
   // Sync category state when actionType changes (e.g., when switching nodes)
   useEffect(() => {
-    const newCategory = actionType ? getCategoryForAction(actionType) : null;
-    setCategory(newCategory || "");
-  }, [actionType]);
+    const newCategory = actionType ? getCategoryForAction(actionType) : null
+    setCategory(newCategory || "")
+  }, [actionType])
 
   const handleCategoryChange = (newCategory: ActionCategory) => {
-    setCategory(newCategory);
+    setCategory(newCategory)
     // Auto-select the first action in the new category
-    const firstAction = ACTION_CATEGORIES[newCategory][0];
-    onUpdateConfig("actionType", firstAction);
-  };
+    const firstAction = ACTION_CATEGORIES[newCategory][0]
+    onUpdateConfig("actionType", firstAction)
+  }
 
   const handleActionTypeChange = (value: string) => {
-    onUpdateConfig("actionType", value);
-  };
+    onUpdateConfig("actionType", value)
+  }
 
   return (
     <>
@@ -605,5 +612,5 @@ export function ActionConfig({
         />
       )}
     </>
-  );
+  )
 }

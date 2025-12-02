@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   AlertDialog,
@@ -9,10 +9,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   clearNodeStatusesAtom,
   currentWorkflowIdAtom,
@@ -29,8 +29,8 @@ import {
   showClearDialogAtom,
   showDeleteDialogAtom,
   updateNodeDataAtom,
-} from "@/lib/workflow-store";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+} from "@/lib/workflow-store"
+import { useAtom, useAtomValue, useSetAtom } from "jotai"
 import {
   Copy,
   Eraser,
@@ -38,22 +38,22 @@ import {
   MenuIcon,
   RefreshCw,
   Trash2,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
-import { Panel } from "../ai-elements/panel";
-import { Drawer, DrawerContent, DrawerTrigger } from "../ui/drawer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { ActionConfig } from "./config/action-config";
-import { ActionGrid } from "./config/action-grid";
-import { ConditionConfig } from "./config/condition-config";
-import { TriggerConfig } from "./config/trigger-config";
-import { WorkflowRuns } from "./workflow-runs";
+} from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useMemo, useRef, useState } from "react"
+import { toast } from "sonner"
+import { Panel } from "../ai-elements/panel"
+import { Drawer, DrawerContent, DrawerTrigger } from "../ui/drawer"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { ActionConfig } from "./config/action-config"
+import { ActionGrid } from "./config/action-grid"
+import { ConditionConfig } from "./config/condition-config"
+import { TriggerConfig } from "./config/trigger-config"
+import { WorkflowRuns } from "./workflow-runs"
 
 // Regex constants
-const NON_ALPHANUMERIC_REGEX = /[^a-zA-Z0-9\s]/g;
-const WORD_SPLIT_REGEX = /\s+/;
+const NON_ALPHANUMERIC_REGEX = /[^a-zA-Z0-9\s]/g
+const WORD_SPLIT_REGEX = /\s+/
 
 // Multi-selection panel component
 const MultiSelectionPanel = ({
@@ -61,35 +61,35 @@ const MultiSelectionPanel = ({
   selectedEdges,
   onDelete,
 }: {
-  selectedNodes: { id: string; selected?: boolean }[];
-  selectedEdges: { id: string; selected?: boolean }[];
-  onDelete: () => void;
+  selectedNodes: { id: string; selected?: boolean }[]
+  selectedEdges: { id: string; selected?: boolean }[]
+  onDelete: () => void
 }) => {
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false)
 
-  const nodeText = selectedNodes.length === 1 ? "node" : "nodes";
-  const edgeText = selectedEdges.length === 1 ? "line" : "lines";
-  const selectionParts: string[] = [];
+  const nodeText = selectedNodes.length === 1 ? "node" : "nodes"
+  const edgeText = selectedEdges.length === 1 ? "line" : "lines"
+  const selectionParts: string[] = []
 
   if (selectedNodes.length > 0) {
-    selectionParts.push(`${selectedNodes.length} ${nodeText}`);
+    selectionParts.push(`${selectedNodes.length} ${nodeText}`)
   }
   if (selectedEdges.length > 0) {
-    selectionParts.push(`${selectedEdges.length} ${edgeText}`);
+    selectionParts.push(`${selectedEdges.length} ${edgeText}`)
   }
 
-  const selectionText = selectionParts.join(" and ");
+  const selectionText = selectionParts.join(" and ")
 
   const handleDelete = () => {
-    onDelete();
-    setShowDeleteAlert(false);
-  };
+    onDelete()
+    setShowDeleteAlert(false)
+  }
 
   return (
     <>
       <div className="flex size-full flex-col">
         <div className="flex h-14 w-full shrink-0 items-center border-b bg-transparent px-4">
-          <h2 className="font-semibold text-foreground">Properties</h2>
+          <h2 className="text-foreground font-semibold">Properties</h2>
         </div>
         <div className="flex-1 space-y-4 overflow-y-auto p-4">
           <div className="space-y-2">
@@ -126,21 +126,21 @@ const MultiSelectionPanel = ({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
-};
+  )
+}
 
 // Generate simple code representation for a node
 function generateNodeCode(node: {
   data: {
-    type: string;
-    label: string;
-    config?: Record<string, unknown>;
-  };
+    type: string
+    label: string
+    config?: Record<string, unknown>
+  }
 }): string {
-  const { type, config } = node.data;
+  const { type, config } = node.data
 
   if (type === "trigger") {
-    const triggerType = config?.triggerType || "Manual";
+    const triggerType = config?.triggerType || "Manual"
     if (triggerType === "Schedule") {
       return `// Schedule Trigger
 // Cron: ${config?.scheduleCron || "0 9 * * *"}
@@ -148,7 +148,7 @@ function generateNodeCode(node: {
 
 export async function trigger() {
   // Workflow starts here on schedule
-}`;
+}`
     }
     if (triggerType === "Webhook") {
       return `// Webhook Trigger
@@ -159,16 +159,16 @@ export async function POST(request: NextRequest) {
   
   // Start workflow execution with webhook payload
   return NextResponse.json({ success: true });
-}`;
+}`
     }
     return `// Manual Trigger
 export async function trigger() {
   // Workflow starts here manually
-}`;
+}`
   }
 
   if (type === "action") {
-    const actionType = config?.actionType;
+    const actionType = config?.actionType
     switch (actionType) {
       case "HTTP Request":
         return `// HTTP Request Action
@@ -178,7 +178,7 @@ const response = await fetch("${config?.endpoint || "https://api.example.com"}",
   body: ${config?.httpMethod === "GET" ? "undefined" : `JSON.stringify(${config?.httpBody || "{}"})`},
 });
 
-const data = await response.json();`;
+const data = await response.json();`
 
       case "Send Email":
         return `// Send Email via Inbound
@@ -191,13 +191,13 @@ await inbound.emails.send({
   to: "${config?.emailTo || "user@example.com"}",
   subject: "${config?.emailSubject || "Subject"}",
   text: "${config?.emailBody || "Email body"}",
-});`;
+});`
 
       case "Database Query":
         return `// Database Query
 import { sql } from "@vercel/postgres";
 
-const result = await sql\`${config?.dbQuery || "SELECT * FROM users"}\`;`;
+const result = await sql\`${config?.dbQuery || "SELECT * FROM users"}\`;`
 
       case "Generate Text":
         return `// Generate Text with AI
@@ -206,7 +206,7 @@ import { generateText } from "ai";
 const { text } = await generateText({
   model: "${config?.aiModel || "gpt-4o"}",
   prompt: "${config?.aiPrompt || "Your prompt here"}",
-});`;
+});`
 
       case "Condition":
         return `// Condition Branch
@@ -216,34 +216,34 @@ if (condition) {
   // True branch
 } else {
   // False branch
-}`;
+}`
 
       default:
         return `// Action: ${actionType || "Unknown"}
-// Configure this action in the Properties tab`;
+// Configure this action in the Properties tab`
     }
   }
 
-  return "// Unknown node type";
+  return "// Unknown node type"
 }
 
 // Generate workflow code from nodes and edges
 function generateWorkflowCode(
   nodes: Array<{
-    id: string;
+    id: string
     data: {
-      type: string;
-      label: string;
-      config?: Record<string, unknown>;
-    };
+      type: string
+      label: string
+      config?: Record<string, unknown>
+    }
   }>,
   _edges: Array<{ source: string; target: string }>,
-  options: { functionName: string }
+  options: { functionName: string },
 ): { code: string } {
-  const { functionName } = options;
+  const { functionName } = options
 
-  const triggerNode = nodes.find((n) => n.data.type === "trigger");
-  const actionNodes = nodes.filter((n) => n.data.type === "action");
+  const triggerNode = nodes.find((n) => n.data.type === "trigger")
+  const actionNodes = nodes.filter((n) => n.data.type === "action")
 
   let code = `// ${functionName}
 // Generated workflow code
@@ -251,57 +251,57 @@ function generateWorkflowCode(
 export async function ${functionName}(input?: unknown) {
   let context = { input };
 
-`;
+`
 
   if (triggerNode) {
-    const triggerType = triggerNode.data.config?.triggerType || "Manual";
-    code += `  // Trigger: ${triggerType}\n`;
+    const triggerType = triggerNode.data.config?.triggerType || "Manual"
+    code += `  // Trigger: ${triggerType}\n`
   }
 
   for (const node of actionNodes) {
-    const actionType = node.data.config?.actionType || "Unknown";
-    code += `  // Step: ${node.data.label || actionType}\n`;
+    const actionType = node.data.config?.actionType || "Unknown"
+    code += `  // Step: ${node.data.label || actionType}\n`
   }
 
   code += `
   return context;
-}`;
+}`
 
-  return { code };
+  return { code }
 }
 
 export const PanelInner = () => {
-  const router = useRouter();
-  const [selectedNodeId] = useAtom(selectedNodeAtom);
-  const [selectedEdgeId] = useAtom(selectedEdgeAtom);
-  const [nodes] = useAtom(nodesAtom);
-  const edges = useAtomValue(edgesAtom);
-  const [isGenerating] = useAtom(isGeneratingAtom);
-  const [currentWorkflowId] = useAtom(currentWorkflowIdAtom);
+  const router = useRouter()
+  const [selectedNodeId] = useAtom(selectedNodeAtom)
+  const [selectedEdgeId] = useAtom(selectedEdgeAtom)
+  const [nodes] = useAtom(nodesAtom)
+  const edges = useAtomValue(edgesAtom)
+  const [isGenerating] = useAtom(isGeneratingAtom)
+  const [currentWorkflowId] = useAtom(currentWorkflowIdAtom)
   const [currentWorkflowName, setCurrentWorkflowName] = useAtom(
-    currentWorkflowNameAtom
-  );
-  const updateNodeData = useSetAtom(updateNodeDataAtom);
-  const deleteNode = useSetAtom(deleteNodeAtom);
-  const deleteEdge = useSetAtom(deleteEdgeAtom);
-  const deleteSelectedItems = useSetAtom(deleteSelectedItemsAtom);
-  const setShowClearDialog = useSetAtom(showClearDialogAtom);
-  const [showDeleteDialog, setShowDeleteDialog] = useAtom(showDeleteDialogAtom);
-  const clearNodeStatuses = useSetAtom(clearNodeStatusesAtom);
-  const [showDeleteNodeAlert, setShowDeleteNodeAlert] = useState(false);
-  const [showDeleteEdgeAlert, setShowDeleteEdgeAlert] = useState(false);
-  const [showDeleteRunsAlert, setShowDeleteRunsAlert] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isDeletingWorkflow, setIsDeletingWorkflow] = useState(false);
-  const [activeTab, setActiveTab] = useAtom(propertiesPanelActiveTabAtom);
-  const refreshRunsRef = useRef<(() => Promise<void>) | null>(null);
-  const selectedNode = nodes.find((node) => node.id === selectedNodeId);
-  const selectedEdge = edges.find((edge) => edge.id === selectedEdgeId);
+    currentWorkflowNameAtom,
+  )
+  const updateNodeData = useSetAtom(updateNodeDataAtom)
+  const deleteNode = useSetAtom(deleteNodeAtom)
+  const deleteEdge = useSetAtom(deleteEdgeAtom)
+  const deleteSelectedItems = useSetAtom(deleteSelectedItemsAtom)
+  const setShowClearDialog = useSetAtom(showClearDialogAtom)
+  const [showDeleteDialog, setShowDeleteDialog] = useAtom(showDeleteDialogAtom)
+  const clearNodeStatuses = useSetAtom(clearNodeStatusesAtom)
+  const [showDeleteNodeAlert, setShowDeleteNodeAlert] = useState(false)
+  const [showDeleteEdgeAlert, setShowDeleteEdgeAlert] = useState(false)
+  const [showDeleteRunsAlert, setShowDeleteRunsAlert] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isDeletingWorkflow, setIsDeletingWorkflow] = useState(false)
+  const [activeTab, setActiveTab] = useAtom(propertiesPanelActiveTabAtom)
+  const refreshRunsRef = useRef<(() => Promise<void>) | null>(null)
+  const selectedNode = nodes.find((node) => node.id === selectedNodeId)
+  const selectedEdge = edges.find((edge) => edge.id === selectedEdgeId)
 
   // Count multiple selections
-  const selectedNodes = nodes.filter((node) => node.selected);
-  const selectedEdges = edges.filter((edge) => edge.selected);
-  const hasMultipleSelections = selectedNodes.length + selectedEdges.length > 1;
+  const selectedNodes = nodes.filter((node) => node.selected)
+  const selectedEdges = edges.filter((edge) => edge.selected)
+  const hasMultipleSelections = selectedNodes.length + selectedEdges.length > 1
 
   // Generate workflow code
   const workflowCode = useMemo(() => {
@@ -311,84 +311,89 @@ export const PanelInner = () => {
         .split(WORD_SPLIT_REGEX)
         .map((word, i) => {
           if (i === 0) {
-            return word.toLowerCase();
+            return word.toLowerCase()
           }
-          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
         })
-        .join("") || "execute";
+        .join("") || "execute"
 
-    const functionName = `${baseName}Workflow`;
+    const functionName = `${baseName}Workflow`
 
-    const { code } = generateWorkflowCode(nodes, edges, { functionName });
-    return code;
-  }, [nodes, edges, currentWorkflowName]);
+    const { code } = generateWorkflowCode(nodes, edges, { functionName })
+    return code
+  }, [nodes, edges, currentWorkflowName])
 
   const handleCopyCode = () => {
     if (selectedNode) {
-      navigator.clipboard.writeText(generateNodeCode(selectedNode));
-      toast.success("Code copied to clipboard");
+      navigator.clipboard.writeText(generateNodeCode(selectedNode))
+      toast.success("Code copied to clipboard")
     }
-  };
+  }
 
   const handleCopyWorkflowCode = () => {
-    navigator.clipboard.writeText(workflowCode);
-    toast.success("Code copied to clipboard");
-  };
+    navigator.clipboard.writeText(workflowCode)
+    toast.success("Code copied to clipboard")
+  }
 
   const handleDelete = () => {
     if (selectedNodeId) {
-      deleteNode(selectedNodeId);
-      setShowDeleteNodeAlert(false);
+      deleteNode(selectedNodeId)
+      setShowDeleteNodeAlert(false)
     }
-  };
+  }
 
   const handleDeleteEdge = () => {
     if (selectedEdgeId) {
-      deleteEdge(selectedEdgeId);
-      setShowDeleteEdgeAlert(false);
+      deleteEdge(selectedEdgeId)
+      setShowDeleteEdgeAlert(false)
     }
-  };
+  }
 
   const handleDeleteAllRuns = async () => {
     if (!currentWorkflowId) {
-      return;
+      return
     }
 
     try {
-      // TODO: Replace with actual API call
-      // await api.workflow.deleteExecutions(currentWorkflowId);
-      clearNodeStatuses();
-      setShowDeleteRunsAlert(false);
-      toast.success("All runs deleted");
+      await fetch(`/api/workflows/${currentWorkflowId}/executions`, {
+        method: "DELETE",
+      })
+      clearNodeStatuses()
+      setShowDeleteRunsAlert(false)
+      // Refresh the runs list
+      if (refreshRunsRef.current) {
+        await refreshRunsRef.current()
+      }
+      toast.success("All runs deleted")
     } catch (error) {
-      console.error("Failed to delete runs:", error);
+      console.error("Failed to delete runs:", error)
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to delete runs";
-      toast.error(errorMessage);
+        error instanceof Error ? error.message : "Failed to delete runs"
+      toast.error(errorMessage)
     }
-  };
+  }
 
   const handleUpdateLabel = (label: string) => {
     if (selectedNode) {
-      updateNodeData({ id: selectedNode.id, data: { label } });
+      updateNodeData({ id: selectedNode.id, data: { label } })
     }
-  };
+  }
 
   const handleUpdateDescription = (description: string) => {
     if (selectedNode) {
-      updateNodeData({ id: selectedNode.id, data: { description } });
+      updateNodeData({ id: selectedNode.id, data: { description } })
     }
-  };
+  }
 
   const handleUpdateConfig = (key: string, value: string) => {
     if (selectedNode) {
-      const newConfig = { ...selectedNode.data.config, [key]: value };
-      updateNodeData({ id: selectedNode.id, data: { config: newConfig } });
+      const newConfig = { ...selectedNode.data.config, [key]: value }
+      updateNodeData({ id: selectedNode.id, data: { config: newConfig } })
     }
-  };
+  }
 
   const handleUpdateWorkspaceName = async (newName: string) => {
-    setCurrentWorkflowName(newName);
+    setCurrentWorkflowName(newName)
 
     // Save to database if workflow exists
     if (currentWorkflowId) {
@@ -397,54 +402,54 @@ export const PanelInner = () => {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: newName, nodes, edges }),
-        });
+        })
       } catch (error) {
-        console.error("Failed to update workflow name:", error);
-        toast.error("Failed to update workspace name");
+        console.error("Failed to update workflow name:", error)
+        toast.error("Failed to update workspace name")
       }
     }
-  };
+  }
 
   const handleRefreshRuns = async () => {
-    setIsRefreshing(true);
+    setIsRefreshing(true)
     try {
       if (refreshRunsRef.current) {
-        await refreshRunsRef.current();
+        await refreshRunsRef.current()
       }
     } catch (error) {
-      console.error("Failed to refresh runs:", error);
-      toast.error("Failed to refresh runs");
+      console.error("Failed to refresh runs:", error)
+      toast.error("Failed to refresh runs")
     } finally {
-      setIsRefreshing(false);
+      setIsRefreshing(false)
     }
-  };
+  }
 
   const handleDeleteWorkflow = async () => {
     if (!currentWorkflowId) {
-      return;
+      return
     }
 
-    setIsDeletingWorkflow(true);
+    setIsDeletingWorkflow(true)
     try {
       const response = await fetch(`/api/workflows/${currentWorkflowId}`, {
         method: "DELETE",
-      });
+      })
 
       if (response.ok) {
-        setShowDeleteDialog(false);
-        toast.success("Workflow deleted");
-        router.push("/workflows");
+        setShowDeleteDialog(false)
+        toast.success("Workflow deleted")
+        router.push("/workflows")
       } else {
-        const error = await response.json();
-        toast.error(error.message || "Failed to delete workflow");
+        const error = await response.json()
+        toast.error(error.message || "Failed to delete workflow")
       }
     } catch (error) {
-      console.error("Failed to delete workflow:", error);
-      toast.error("Failed to delete workflow");
+      console.error("Failed to delete workflow:", error)
+      toast.error("Failed to delete workflow")
     } finally {
-      setIsDeletingWorkflow(false);
+      setIsDeletingWorkflow(false)
     }
-  };
+  }
 
   // If multiple items are selected, show multi-selection properties
   if (hasMultipleSelections) {
@@ -454,7 +459,7 @@ export const PanelInner = () => {
         selectedEdges={selectedEdges}
         selectedNodes={selectedNodes}
       />
-    );
+    )
   }
 
   // If an edge is selected, show edge properties
@@ -463,7 +468,7 @@ export const PanelInner = () => {
       <>
         <div className="flex size-full flex-col">
           <div className="flex h-14 w-full shrink-0 items-center border-b bg-transparent px-4">
-            <h2 className="font-semibold text-foreground">Properties</h2>
+            <h2 className="text-foreground font-semibold">Properties</h2>
           </div>
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
             <div className="space-y-2">
@@ -517,7 +522,7 @@ export const PanelInner = () => {
           </AlertDialogContent>
         </AlertDialog>
       </>
-    );
+    )
   }
 
   // If no node is selected, show workspace properties and runs
@@ -532,19 +537,19 @@ export const PanelInner = () => {
         >
           <TabsList className="h-14 w-full shrink-0 rounded-none border-b bg-transparent px-4 py-2.5">
             <TabsTrigger
-              className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
+              className="text-muted-foreground data-[state=active]:text-foreground bg-transparent data-[state=active]:shadow-none"
               value="properties"
             >
               Properties
             </TabsTrigger>
             <TabsTrigger
-              className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
+              className="text-muted-foreground data-[state=active]:text-foreground bg-transparent data-[state=active]:shadow-none"
               value="code"
             >
               Code
             </TabsTrigger>
             <TabsTrigger
-              className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
+              className="text-muted-foreground data-[state=active]:text-foreground bg-transparent data-[state=active]:shadow-none"
               value="runs"
             >
               Runs
@@ -615,9 +620,9 @@ export const PanelInner = () => {
             </div>
           </TabsContent>
           <TabsContent className="flex flex-col overflow-hidden" value="code">
-            <div className="shrink-0 border-b bg-muted/30 px-3 pb-2">
+            <div className="bg-muted/30 shrink-0 border-b px-3 pb-2">
               <div className="flex items-center gap-2">
-                <FileCode className="size-3.5 text-muted-foreground" />
+                <FileCode className="text-muted-foreground size-3.5" />
                 <code className="text-muted-foreground text-xs">
                   workflows/
                   {currentWorkflowName
@@ -629,7 +634,7 @@ export const PanelInner = () => {
               </div>
             </div>
             <div className="flex-1 overflow-auto p-4">
-              <pre className="rounded-lg border bg-muted/50 p-4 font-mono text-xs leading-relaxed">
+              <pre className="bg-muted/50 rounded-lg border p-4 font-mono text-xs leading-relaxed">
                 {workflowCode}
               </pre>
             </div>
@@ -666,16 +671,13 @@ export const PanelInner = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        <AlertDialog
-          onOpenChange={setShowDeleteDialog}
-          open={showDeleteDialog}
-        >
+        <AlertDialog onOpenChange={setShowDeleteDialog} open={showDeleteDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Workflow</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete &quot;{currentWorkflowName}&quot;? This action
-                cannot be undone.
+                Are you sure you want to delete &quot;{currentWorkflowName}
+                &quot;? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -692,7 +694,7 @@ export const PanelInner = () => {
           </AlertDialogContent>
         </AlertDialog>
       </>
-    );
+    )
   }
 
   return (
@@ -705,7 +707,7 @@ export const PanelInner = () => {
       >
         <TabsList className="h-14 w-full shrink-0 rounded-none border-b bg-transparent px-4 py-2.5">
           <TabsTrigger
-            className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            className="text-muted-foreground data-[state=active]:text-foreground bg-transparent data-[state=active]:shadow-none"
             value="properties"
           >
             Properties
@@ -713,14 +715,14 @@ export const PanelInner = () => {
           {selectedNode.data.type !== "trigger" ||
           (selectedNode.data.config?.triggerType as string) !== "Manual" ? (
             <TabsTrigger
-              className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
+              className="text-muted-foreground data-[state=active]:text-foreground bg-transparent data-[state=active]:shadow-none"
               value="code"
             >
               Code
             </TabsTrigger>
           ) : null}
           <TabsTrigger
-            className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            className="text-muted-foreground data-[state=active]:text-foreground bg-transparent data-[state=active]:shadow-none"
             value="runs"
           >
             Runs
@@ -825,17 +827,17 @@ export const PanelInner = () => {
         </TabsContent>
         <TabsContent className="flex flex-col overflow-hidden" value="code">
           {(() => {
-            const triggerType = selectedNode.data.config?.triggerType as string;
-            let filename = "";
+            const triggerType = selectedNode.data.config?.triggerType as string
+            let filename = ""
 
             if (selectedNode.data.type === "trigger") {
               if (triggerType === "Schedule") {
-                filename = "vercel.json";
+                filename = "vercel.json"
               } else if (triggerType === "Webhook") {
                 const webhookPath =
                   (selectedNode.data.config?.webhookPath as string) ||
-                  "/webhook";
-                filename = `app/api${webhookPath}/route.ts`;
+                  "/webhook"
+                filename = `app/api${webhookPath}/route.ts`
               }
             } else {
               filename = `steps/${
@@ -843,15 +845,15 @@ export const PanelInner = () => {
                   ?.toLowerCase()
                   .replace(/\s+/g, "-")
                   .replace(/[^a-z0-9-]/g, "") || "action"
-              }-step.ts`;
+              }-step.ts`
             }
 
             return (
               <>
                 {filename && (
-                  <div className="shrink-0 border-b bg-muted/30 px-3 pb-2">
+                  <div className="bg-muted/30 shrink-0 border-b px-3 pb-2">
                     <div className="flex items-center gap-2">
-                      <FileCode className="size-3.5 text-muted-foreground" />
+                      <FileCode className="text-muted-foreground size-3.5" />
                       <code className="text-muted-foreground text-xs">
                         {filename}
                       </code>
@@ -859,7 +861,7 @@ export const PanelInner = () => {
                   </div>
                 )}
                 <div className="flex-1 overflow-auto p-4">
-                  <pre className="rounded-lg border bg-muted/50 p-4 font-mono text-xs leading-relaxed">
+                  <pre className="bg-muted/50 rounded-lg border p-4 font-mono text-xs leading-relaxed">
                     {generateNodeCode(selectedNode)}
                   </pre>
                 </div>
@@ -870,7 +872,7 @@ export const PanelInner = () => {
                   </Button>
                 </div>
               </>
-            );
+            )
           })()}
         </TabsContent>
         <TabsContent className="flex flex-col overflow-hidden" value="runs">
@@ -944,8 +946,8 @@ export const PanelInner = () => {
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
-};
+  )
+}
 
 export const NodeConfigPanel = () => {
   return (
@@ -967,9 +969,9 @@ export const NodeConfigPanel = () => {
       </div>
 
       {/* Desktop: Docked sidebar - now resizable */}
-      <div className="hidden size-full flex-col bg-background md:flex">
+      <div className="bg-background hidden size-full flex-col md:flex">
         <PanelInner />
       </div>
     </>
-  );
-};
+  )
+}

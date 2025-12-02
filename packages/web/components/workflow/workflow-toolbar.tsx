@@ -1,87 +1,101 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
+import { Button } from "@/components/ui/button"
+import { ButtonGroup } from "@/components/ui/button-group"
+import { api } from "@/lib/api-client"
 import {
   addNodeAtom,
   canRedoAtom,
   canUndoAtom,
+  currentWorkflowIdAtom,
+  edgesAtom,
+  isExecutingAtom,
   isGeneratingAtom,
   nodesAtom,
+  propertiesPanelActiveTabAtom,
   redoAtom,
+  selectedEdgeAtom,
+  selectedExecutionIdAtom,
   selectedNodeAtom,
   undoAtom,
+  updateNodeDataAtom,
   type WorkflowNode,
-} from "@/lib/workflow-store";
-import { useReactFlow } from "@xyflow/react";
-import { useAtom, useSetAtom } from "jotai";
-import {
-  Plus,
-  Redo2,
-  Undo2,
-} from "lucide-react";
-import { nanoid } from "nanoid";
-import { Panel } from "../ai-elements/panel";
-import { WorkflowSelector } from "./workflow-selector";
+} from "@/lib/workflow-store"
+import { useReactFlow } from "@xyflow/react"
+import { useAtom, useSetAtom } from "jotai"
+import { Loader2, Play, Plus, Redo2, Undo2 } from "lucide-react"
+import { nanoid } from "nanoid"
+import { useRef } from "react"
+import { toast } from "sonner"
+import { Panel } from "../ai-elements/panel"
+import { WorkflowSelector } from "./workflow-selector"
 
 type WorkflowToolbarProps = {
-  workflowId?: string;
-};
+  workflowId?: string
+}
 
 export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
-  const [nodes] = useAtom(nodesAtom);
-  const [isGenerating] = useAtom(isGeneratingAtom);
-  const [canUndo] = useAtom(canUndoAtom);
-  const [canRedo] = useAtom(canRedoAtom);
-  const undo = useSetAtom(undoAtom);
-  const redo = useSetAtom(redoAtom);
-  const addNode = useSetAtom(addNodeAtom);
-  const setSelectedNodeId = useSetAtom(selectedNodeAtom);
-  const { screenToFlowPosition } = useReactFlow();
+  const [nodes, setNodes] = useAtom(nodesAtom)
+  const [edges, setEdges] = useAtom(edgesAtom)
+  const [isGenerating] = useAtom(isGeneratingAtom)
+  const [isExecuting, setIsExecuting] = useAtom(isExecutingAtom)
+  const [canUndo] = useAtom(canUndoAtom)
+  const [canRedo] = useAtom(canRedoAtom)
+  const [currentWorkflowId] = useAtom(currentWorkflowIdAtom)
+  const undo = useSetAtom(undoAtom)
+  const redo = useSetAtom(redoAtom)
+  const addNode = useSetAtom(addNodeAtom)
+  const setSelectedNodeId = useSetAtom(selectedNodeAtom)
+  const setSelectedEdgeId = useSetAtom(selectedEdgeAtom)
+  const updateNodeData = useSetAtom(updateNodeDataAtom)
+  const setActiveTab = useSetAtom(propertiesPanelActiveTabAtom)
+  const setSelectedExecutionId = useSetAtom(selectedExecutionIdAtom)
+  const { screenToFlowPosition } = useReactFlow()
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleAddStep = () => {
     // Get the ReactFlow wrapper (the visible canvas container)
-    const flowWrapper = document.querySelector(".react-flow");
+    const flowWrapper = document.querySelector(".react-flow")
     if (!flowWrapper) {
-      return;
+      return
     }
 
-    const rect = flowWrapper.getBoundingClientRect();
+    const rect = flowWrapper.getBoundingClientRect()
     // Calculate center in absolute screen coordinates
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
 
     // Convert to flow coordinates
-    const position = screenToFlowPosition({ x: centerX, y: centerY });
+    const position = screenToFlowPosition({ x: centerX, y: centerY })
 
     // Adjust for node dimensions to center it properly
     // Action node is 192px wide and 192px tall (w-48 h-48 in Tailwind)
-    const nodeWidth = 192;
-    const nodeHeight = 192;
-    position.x -= nodeWidth / 2;
-    position.y -= nodeHeight / 2;
+    const nodeWidth = 192
+    const nodeHeight = 192
+    position.x -= nodeWidth / 2
+    position.y -= nodeHeight / 2
 
     // Check if there's already a node at this position
-    const offset = 20; // Offset distance in pixels
-    const threshold = 20; // How close nodes need to be to be considered overlapping
+    const offset = 20 // Offset distance in pixels
+    const threshold = 20 // How close nodes need to be to be considered overlapping
 
-    const finalPosition = { ...position };
-    let hasOverlap = true;
-    let attempts = 0;
-    const maxAttempts = 20; // Prevent infinite loop
+    const finalPosition = { ...position }
+    let hasOverlap = true
+    let attempts = 0
+    const maxAttempts = 20 // Prevent infinite loop
 
     while (hasOverlap && attempts < maxAttempts) {
       hasOverlap = nodes.some((node) => {
-        const dx = Math.abs(node.position.x - finalPosition.x);
-        const dy = Math.abs(node.position.y - finalPosition.y);
-        return dx < threshold && dy < threshold;
-      });
+        const dx = Math.abs(node.position.x - finalPosition.x)
+        const dy = Math.abs(node.position.y - finalPosition.y)
+        return dx < threshold && dy < threshold
+      })
 
       if (hasOverlap) {
         // Offset diagonally down-right
-        finalPosition.x += offset;
-        finalPosition.y += offset;
-        attempts += 1;
+        finalPosition.x += offset
+        finalPosition.y += offset
+        attempts += 1
       }
     }
 
@@ -97,14 +111,103 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
         config: {},
         status: "idle",
       },
-    };
+    }
 
-    addNode(newNode);
-    setSelectedNodeId(newNode.id);
-  };
+    addNode(newNode)
+    setSelectedNodeId(newNode.id)
+  }
+
+  // Update all node statuses helper
+  const updateNodesStatus = (
+    status: "idle" | "running" | "success" | "error",
+  ) => {
+    for (const node of nodes) {
+      updateNodeData({ id: node.id, data: { status } })
+    }
+  }
+
+  // Execute workflow
+  const handleExecute = async () => {
+    if (!currentWorkflowId || isExecuting) {
+      return
+    }
+
+    // Switch to Runs tab when starting a test run
+    setActiveTab("runs")
+
+    // Deselect all nodes and edges
+    setNodes(nodes.map((node) => ({ ...node, selected: false })))
+    setEdges(edges.map((edge) => ({ ...edge, selected: false })))
+    setSelectedNodeId(null)
+    setSelectedEdgeId(null)
+
+    setIsExecuting(true)
+
+    // Set all nodes to idle first
+    updateNodesStatus("idle")
+
+    // Immediately set trigger nodes to running for instant visual feedback
+    for (const node of nodes) {
+      if (node.data.type === "trigger") {
+        updateNodeData({ id: node.id, data: { status: "running" } })
+      }
+    }
+
+    try {
+      // Start the execution via API
+      const result = await api.workflow.execute(currentWorkflowId)
+
+      // Select the new execution
+      setSelectedExecutionId(result.executionId)
+
+      // Poll for execution status updates
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusData = await api.workflow.getExecutionStatus(
+            result.executionId,
+          )
+
+          // Update node statuses based on the execution logs
+          for (const nodeStatus of statusData.nodeStatuses) {
+            updateNodeData({
+              id: nodeStatus.nodeId,
+              data: {
+                status: nodeStatus.status as
+                  | "idle"
+                  | "running"
+                  | "success"
+                  | "error",
+              },
+            })
+          }
+
+          // Stop polling if execution is complete
+          if (statusData.status !== "running") {
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current)
+              pollingIntervalRef.current = null
+            }
+
+            setIsExecuting(false)
+          }
+        } catch (error) {
+          console.error("Failed to poll execution status:", error)
+        }
+      }, 500) // Poll every 500ms
+
+      pollingIntervalRef.current = pollInterval
+    } catch (error) {
+      console.error("Failed to execute workflow:", error)
+      toast.error(
+        error instanceof Error ? error.message : "Failed to execute workflow",
+      )
+      updateNodesStatus("error")
+      setIsExecuting(false)
+    }
+  }
 
   if (!workflowId) {
-    return null;
+    return null
   }
 
   return (
@@ -121,7 +224,7 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
           {/* Add Step */}
           <ButtonGroup className="hidden lg:flex" orientation="horizontal">
             <Button
-              className="border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5 disabled:[&>svg]:text-muted-foreground"
+              className="disabled:[&>svg]:text-muted-foreground border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5"
               disabled={isGenerating}
               onClick={handleAddStep}
               size="icon"
@@ -135,7 +238,7 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
           {/* Undo/Redo */}
           <ButtonGroup className="hidden lg:flex" orientation="horizontal">
             <Button
-              className="border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5 disabled:[&>svg]:text-muted-foreground"
+              className="disabled:[&>svg]:text-muted-foreground border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5"
               disabled={!canUndo || isGenerating}
               onClick={() => undo()}
               size="icon"
@@ -145,7 +248,7 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
               <Undo2 className="size-4" />
             </Button>
             <Button
-              className="border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5 disabled:[&>svg]:text-muted-foreground"
+              className="disabled:[&>svg]:text-muted-foreground border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5"
               disabled={!canRedo || isGenerating}
               onClick={() => redo()}
               size="icon"
@@ -156,10 +259,26 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
             </Button>
           </ButtonGroup>
 
+          {/* Run Workflow */}
+          <Button
+            className="disabled:[&>svg]:text-muted-foreground border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5"
+            disabled={isExecuting || nodes.length === 0 || isGenerating}
+            onClick={handleExecute}
+            size="icon"
+            title="Run Workflow"
+            variant="secondary"
+          >
+            {isExecuting ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Play className="size-4" />
+            )}
+          </Button>
+
           {/* Mobile Add Step */}
           <ButtonGroup className="flex lg:hidden" orientation="vertical">
             <Button
-              className="border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5 disabled:[&>svg]:text-muted-foreground"
+              className="disabled:[&>svg]:text-muted-foreground border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5"
               disabled={isGenerating}
               onClick={handleAddStep}
               size="icon"
@@ -173,7 +292,7 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
           {/* Mobile Undo/Redo */}
           <ButtonGroup className="flex lg:hidden" orientation="vertical">
             <Button
-              className="border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5 disabled:[&>svg]:text-muted-foreground"
+              className="disabled:[&>svg]:text-muted-foreground border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5"
               disabled={!canUndo || isGenerating}
               onClick={() => undo()}
               size="icon"
@@ -183,7 +302,7 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
               <Undo2 className="size-4" />
             </Button>
             <Button
-              className="border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5 disabled:[&>svg]:text-muted-foreground"
+              className="disabled:[&>svg]:text-muted-foreground border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5"
               disabled={!canRedo || isGenerating}
               onClick={() => redo()}
               size="icon"
@@ -193,9 +312,24 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
               <Redo2 className="size-4" />
             </Button>
           </ButtonGroup>
+
+          {/* Mobile Run Workflow */}
+          <Button
+            className="disabled:[&>svg]:text-muted-foreground border hover:bg-black/5 disabled:opacity-100 lg:hidden dark:hover:bg-white/5"
+            disabled={isExecuting || nodes.length === 0 || isGenerating}
+            onClick={handleExecute}
+            size="icon"
+            title="Run Workflow"
+            variant="secondary"
+          >
+            {isExecuting ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Play className="size-4" />
+            )}
+          </Button>
         </div>
       </div>
     </>
-  );
-};
-
+  )
+}
