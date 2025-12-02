@@ -5,6 +5,7 @@
 
 import { db } from "@/db"
 import { workflowExecutionLogs, workflowExecutions } from "@/db/schema"
+import { Inbound } from "@inboundemail/sdk"
 import { eq } from "drizzle-orm"
 import type { WorkflowEdge, WorkflowNode } from "./workflow-store"
 
@@ -266,6 +267,81 @@ async function executeHttpRequest(
 }
 
 /**
+ * Execute Send Email action using Inbound SDK
+ */
+async function executeSendEmail(
+  config: Record<string, unknown>,
+): Promise<ExecutionResult> {
+  const to = config.emailTo as string
+  const subject = config.emailSubject as string
+  const body = config.emailBody as string
+
+  if (!to) {
+    return {
+      success: false,
+      error: "Send email failed: recipient email (to) is required",
+    }
+  }
+
+  if (!subject) {
+    return {
+      success: false,
+      error: "Send email failed: subject is required",
+    }
+  }
+
+  const apiKey = process.env.INBOUND_API_KEY
+  if (!apiKey) {
+    return {
+      success: false,
+      error:
+        "Send email failed: INBOUND_API_KEY environment variable is not configured",
+    }
+  }
+
+  const fromEmail = process.env.INBOUND_FROM_EMAIL
+  if (!fromEmail) {
+    return {
+      success: false,
+      error:
+        "Send email failed: INBOUND_FROM_EMAIL environment variable is not configured",
+    }
+  }
+
+  try {
+    const inbound = new Inbound(apiKey)
+
+    const response = await inbound.email.send({
+      from: fromEmail,
+      to,
+      subject,
+      text: body,
+    })
+
+    if (response.error) {
+      return {
+        success: false,
+        error: `Send email failed: ${response.error}`,
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        id: response.data?.id,
+        messageId: response.data?.messageId,
+        status: response.data?.status || "sent",
+      },
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: `Send email failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    }
+  }
+}
+
+/**
  * Execute a single action step
  */
 async function executeActionStep(
@@ -286,6 +362,9 @@ async function executeActionStep(
     switch (actionType) {
       case "HTTP Request":
         result = await executeHttpRequest(processedConfig)
+        break
+      case "Send Email":
+        result = await executeSendEmail(processedConfig)
         break
       default:
         result = {
