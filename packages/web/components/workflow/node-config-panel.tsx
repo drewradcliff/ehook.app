@@ -31,16 +31,9 @@ import {
   updateNodeDataAtom,
 } from "@/lib/workflow-store"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
-import {
-  Copy,
-  Eraser,
-  FileCode,
-  MenuIcon,
-  RefreshCw,
-  Trash2,
-} from "lucide-react"
+import { Eraser, MenuIcon, RefreshCw, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useMemo, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { toast } from "sonner"
 import { Panel } from "../ai-elements/panel"
 import { Drawer, DrawerContent, DrawerTrigger } from "../ui/drawer"
@@ -51,9 +44,6 @@ import { ConditionConfig } from "./config/condition-config"
 import { TriggerConfig } from "./config/trigger-config"
 import { WorkflowRuns } from "./workflow-runs"
 
-// Regex constants
-const NON_ALPHANUMERIC_REGEX = /[^a-zA-Z0-9\s]/g
-const WORD_SPLIT_REGEX = /\s+/
 
 // Multi-selection panel component
 const MultiSelectionPanel = ({
@@ -129,147 +119,6 @@ const MultiSelectionPanel = ({
   )
 }
 
-// Generate simple code representation for a node
-function generateNodeCode(node: {
-  data: {
-    type: string
-    label: string
-    config?: Record<string, unknown>
-  }
-}): string {
-  const { type, config } = node.data
-
-  if (type === "trigger") {
-    const triggerType = config?.triggerType || "Manual"
-    if (triggerType === "Schedule") {
-      return `// Schedule Trigger
-// Cron: ${config?.scheduleCron || "0 9 * * *"}
-// Timezone: ${config?.scheduleTimezone || "UTC"}
-
-export async function trigger() {
-  // Workflow starts here on schedule
-}`
-    }
-    if (triggerType === "Webhook") {
-      return `// Webhook Trigger
-import { NextRequest, NextResponse } from "next/server";
-
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  
-  // Start workflow execution with webhook payload
-  return NextResponse.json({ success: true });
-}`
-    }
-    return `// Manual Trigger
-export async function trigger() {
-  // Workflow starts here manually
-}`
-  }
-
-  if (type === "action") {
-    const actionType = config?.actionType
-    switch (actionType) {
-      case "HTTP Request":
-        return `// HTTP Request Action
-const response = await fetch("${config?.endpoint || "https://api.example.com"}", {
-  method: "${config?.httpMethod || "POST"}",
-  headers: ${config?.httpHeaders || "{}"},
-  body: ${config?.httpMethod === "GET" ? "undefined" : `JSON.stringify(${config?.httpBody || "{}"})`},
-});
-
-const data = await response.json();`
-
-      case "Send Email":
-        return `// Send Email via Inbound
-import { Inbound } from "@inboundemail/sdk";
-
-const inbound = new Inbound(process.env.INBOUND_API_KEY);
-
-await inbound.emails.send({
-  from: "noreply@example.com",
-  to: "${config?.emailTo || "user@example.com"}",
-  subject: "${config?.emailSubject || "Subject"}",
-  text: "${config?.emailBody || "Email body"}",
-});`
-
-      case "Database Query":
-        return `// Database Query
-import { sql } from "@vercel/postgres";
-
-const result = await sql\`${config?.dbQuery || "SELECT * FROM users"}\`;`
-
-      case "Generate Text":
-        return `// Generate Text with AI
-import { generateText } from "ai";
-
-const { text } = await generateText({
-  model: "${config?.aiModel || "gpt-4o"}",
-  prompt: "${config?.aiPrompt || "Your prompt here"}",
-});`
-
-      case "Condition":
-        return `// Condition Branch
-const condition = ${config?.condition || "true"};
-
-if (condition) {
-  // True branch
-} else {
-  // False branch
-}`
-
-      default:
-        return `// Action: ${actionType || "Unknown"}
-// Configure this action in the Properties tab`
-    }
-  }
-
-  return "// Unknown node type"
-}
-
-// Generate workflow code from nodes and edges
-function generateWorkflowCode(
-  nodes: Array<{
-    id: string
-    data: {
-      type: string
-      label: string
-      config?: Record<string, unknown>
-    }
-  }>,
-  _edges: Array<{ source: string; target: string }>,
-  options: { functionName: string },
-): { code: string } {
-  const { functionName } = options
-
-  const triggerNode = nodes.find((n) => n.data.type === "trigger")
-  const actionNodes = nodes.filter((n) => n.data.type === "action")
-
-  let code = `// ${functionName}
-// Generated workflow code
-
-export async function ${functionName}(input?: unknown) {
-  let context = { input };
-
-`
-
-  if (triggerNode) {
-    const triggerType = triggerNode.data.config?.triggerType || "Manual"
-    code += `  // Trigger: ${triggerType}\n`
-  }
-
-  for (const node of actionNodes) {
-    const actionType = node.data.config?.actionType || "Unknown"
-    code += `  // Step: ${node.data.label || actionType}\n`
-  }
-
-  code += `
-  return context;
-}`
-
-  return { code }
-}
-
 export const PanelInner = () => {
   const router = useRouter()
   const [selectedNodeId] = useAtom(selectedNodeAtom)
@@ -302,38 +151,6 @@ export const PanelInner = () => {
   const selectedNodes = nodes.filter((node) => node.selected)
   const selectedEdges = edges.filter((edge) => edge.selected)
   const hasMultipleSelections = selectedNodes.length + selectedEdges.length > 1
-
-  // Generate workflow code
-  const workflowCode = useMemo(() => {
-    const baseName =
-      currentWorkflowName
-        .replace(NON_ALPHANUMERIC_REGEX, "")
-        .split(WORD_SPLIT_REGEX)
-        .map((word, i) => {
-          if (i === 0) {
-            return word.toLowerCase()
-          }
-          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-        })
-        .join("") || "execute"
-
-    const functionName = `${baseName}Workflow`
-
-    const { code } = generateWorkflowCode(nodes, edges, { functionName })
-    return code
-  }, [nodes, edges, currentWorkflowName])
-
-  const handleCopyCode = () => {
-    if (selectedNode) {
-      navigator.clipboard.writeText(generateNodeCode(selectedNode))
-      toast.success("Code copied to clipboard")
-    }
-  }
-
-  const handleCopyWorkflowCode = () => {
-    navigator.clipboard.writeText(workflowCode)
-    toast.success("Code copied to clipboard")
-  }
 
   const handleDelete = () => {
     if (selectedNodeId) {
@@ -544,12 +361,6 @@ export const PanelInner = () => {
             </TabsTrigger>
             <TabsTrigger
               className="text-muted-foreground data-[state=active]:text-foreground bg-transparent data-[state=active]:shadow-none"
-              value="code"
-            >
-              Code
-            </TabsTrigger>
-            <TabsTrigger
-              className="text-muted-foreground data-[state=active]:text-foreground bg-transparent data-[state=active]:shadow-none"
               value="runs"
             >
               Runs
@@ -619,35 +430,6 @@ export const PanelInner = () => {
               </Button>
             </div>
           </TabsContent>
-          <TabsContent className="flex flex-col overflow-hidden" value="code">
-            <div className="bg-muted/30 shrink-0 border-b px-3 pb-2">
-              <div className="flex items-center gap-2">
-                <FileCode className="text-muted-foreground size-3.5" />
-                <code className="text-muted-foreground text-xs">
-                  workflows/
-                  {currentWorkflowName
-                    .toLowerCase()
-                    .replace(/\s+/g, "-")
-                    .replace(/[^a-z0-9-]/g, "") || "workflow"}
-                  .ts
-                </code>
-              </div>
-            </div>
-            <div className="flex-1 overflow-auto p-4">
-              <pre className="bg-muted/50 rounded-lg border p-4 font-mono text-xs leading-relaxed">
-                {workflowCode}
-              </pre>
-            </div>
-            <div className="shrink-0 border-t p-4">
-              <Button
-                onClick={handleCopyWorkflowCode}
-                size="icon"
-                variant="ghost"
-              >
-                <Copy className="size-4" />
-              </Button>
-            </div>
-          </TabsContent>
         </Tabs>
 
         <AlertDialog
@@ -712,15 +494,6 @@ export const PanelInner = () => {
           >
             Properties
           </TabsTrigger>
-          {selectedNode.data.type !== "trigger" ||
-          (selectedNode.data.config?.triggerType as string) !== "Manual" ? (
-            <TabsTrigger
-              className="text-muted-foreground data-[state=active]:text-foreground bg-transparent data-[state=active]:shadow-none"
-              value="code"
-            >
-              Code
-            </TabsTrigger>
-          ) : null}
           <TabsTrigger
             className="text-muted-foreground data-[state=active]:text-foreground bg-transparent data-[state=active]:shadow-none"
             value="runs"
@@ -824,56 +597,6 @@ export const PanelInner = () => {
               </Button>
             </div>
           )}
-        </TabsContent>
-        <TabsContent className="flex flex-col overflow-hidden" value="code">
-          {(() => {
-            const triggerType = selectedNode.data.config?.triggerType as string
-            let filename = ""
-
-            if (selectedNode.data.type === "trigger") {
-              if (triggerType === "Schedule") {
-                filename = "vercel.json"
-              } else if (triggerType === "Webhook") {
-                const webhookPath =
-                  (selectedNode.data.config?.webhookPath as string) ||
-                  "/webhook"
-                filename = `app/api${webhookPath}/route.ts`
-              }
-            } else {
-              filename = `steps/${
-                (selectedNode.data.config?.actionType as string)
-                  ?.toLowerCase()
-                  .replace(/\s+/g, "-")
-                  .replace(/[^a-z0-9-]/g, "") || "action"
-              }-step.ts`
-            }
-
-            return (
-              <>
-                {filename && (
-                  <div className="bg-muted/30 shrink-0 border-b px-3 pb-2">
-                    <div className="flex items-center gap-2">
-                      <FileCode className="text-muted-foreground size-3.5" />
-                      <code className="text-muted-foreground text-xs">
-                        {filename}
-                      </code>
-                    </div>
-                  </div>
-                )}
-                <div className="flex-1 overflow-auto p-4">
-                  <pre className="bg-muted/50 rounded-lg border p-4 font-mono text-xs leading-relaxed">
-                    {generateNodeCode(selectedNode)}
-                  </pre>
-                </div>
-                <div className="shrink-0 border-t p-4">
-                  <Button onClick={handleCopyCode} size="sm" variant="ghost">
-                    <Copy className="mr-2 size-4" />
-                    Copy Code
-                  </Button>
-                </div>
-              </>
-            )
-          })()}
         </TabsContent>
         <TabsContent className="flex flex-col overflow-hidden" value="runs">
           <div className="flex-1 space-y-4 overflow-y-auto p-4">

@@ -3,16 +3,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import {
-  Database,
-  Globe,
-  Mail,
-  MessageSquare,
-  Search,
-  Settings,
-  Sparkles,
-  Zap,
-} from "lucide-react";
+import { Mail, Search, Zap } from "lucide-react";
 import { useState } from "react";
 
 type ActionType = {
@@ -32,53 +23,11 @@ const actions: ActionType[] = [
     icon: Zap,
   },
   {
-    id: "Database Query",
-    label: "Database Query",
-    description: "Query your database",
-    category: "System",
-    icon: Database,
-  },
-  {
-    id: "Condition",
-    label: "Condition",
-    description: "Branch based on a condition",
-    category: "System",
-    icon: Settings,
-  },
-  {
     id: "Send Email",
     label: "Send Email",
     description: "Send an email via Inbound",
     category: "Inbound",
     icon: Mail,
-  },
-  {
-    id: "Send Slack Message",
-    label: "Send Slack Message",
-    description: "Post a message to Slack",
-    category: "Slack",
-    icon: MessageSquare,
-  },
-  {
-    id: "Generate Text",
-    label: "Generate Text",
-    description: "Generate text with AI",
-    category: "AI",
-    icon: Sparkles,
-  },
-  {
-    id: "Scrape",
-    label: "Scrape URL",
-    description: "Scrape content from a URL",
-    category: "Web",
-    icon: Globe,
-  },
-  {
-    id: "Search",
-    label: "Search Web",
-    description: "Search the web",
-    category: "Web",
-    icon: Search,
   },
 ];
 
