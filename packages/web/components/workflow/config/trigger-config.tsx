@@ -1,43 +1,44 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Clock, Copy, Play, Webhook } from "lucide-react";
-import { toast } from "sonner";
-import { SchemaBuilder, type SchemaField } from "./schema-builder";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Clock, Copy, Play, Webhook } from "lucide-react"
+import { toast } from "sonner"
+import { SchemaBuilder, type SchemaField } from "./schema-builder"
 
 type TriggerConfigProps = {
-  config: Record<string, unknown>;
-  onUpdateConfig: (key: string, value: string) => void;
-  disabled: boolean;
-  workflowId?: string;
-};
+  config: Record<string, unknown>
+  onUpdateConfig: (key: string, value: string) => void
+  disabled: boolean
+  workflowId?: string
+  webhookId?: string
+}
 
 export function TriggerConfig({
   config,
   onUpdateConfig,
   disabled,
-  workflowId,
+  webhookId,
 }: TriggerConfigProps) {
-  const webhookUrl = workflowId
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/api/workflows/${workflowId}/webhook`
-    : "";
+  const webhookUrl = webhookId
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/api/webhook/${webhookId}`
+    : ""
 
   const handleCopyWebhookUrl = () => {
     if (webhookUrl) {
-      navigator.clipboard.writeText(webhookUrl);
-      toast.success("Webhook URL copied to clipboard");
+      navigator.clipboard.writeText(webhookUrl)
+      toast.success("Webhook URL copied to clipboard")
     }
-  };
+  }
 
   return (
     <>
@@ -107,7 +108,7 @@ export function TriggerConfig({
               schema={
                 config?.webhookSchema
                   ? (JSON.parse(
-                      config.webhookSchema as string
+                      config.webhookSchema as string,
                     ) as SchemaField[])
                   : []
               }
@@ -192,5 +193,5 @@ export function TriggerConfig({
         </>
       )}
     </>
-  );
+  )
 }

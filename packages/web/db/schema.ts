@@ -1,6 +1,6 @@
-import { relations } from "drizzle-orm";
-import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { v4 as uuidv4 } from "uuid";
+import { relations } from "drizzle-orm"
+import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import { v4 as uuidv4 } from "uuid"
 
 // Workflows table
 export const workflows = pgTable("workflows", {
@@ -9,6 +9,10 @@ export const workflows = pgTable("workflows", {
     .$defaultFn(() => uuidv4()),
   name: text("name").notNull(),
   description: text("description"),
+  // Webhook ID for triggering this workflow via /api/webhook/[uuid]
+  webhookId: text("webhook_id")
+    .notNull()
+    .$defaultFn(() => uuidv4()),
   // Store React Flow nodes as JSON
   nodes: jsonb("nodes").notNull().$type<unknown[]>().default([]),
   // Store React Flow edges as JSON
@@ -20,7 +24,7 @@ export const workflows = pgTable("workflows", {
     .default("draft"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+})
 
 // Workflow executions table to track workflow runs
 export const workflowExecutions = pgTable("workflow_executions", {
@@ -44,7 +48,7 @@ export const workflowExecutions = pgTable("workflow_executions", {
   completedAt: timestamp("completed_at"),
   // Duration in milliseconds
   durationMs: text("duration_ms"),
-});
+})
 
 // Workflow execution logs to track individual node executions
 export const workflowExecutionLogs = pgTable("workflow_execution_logs", {
@@ -71,12 +75,12 @@ export const workflowExecutionLogs = pgTable("workflow_execution_logs", {
   completedAt: timestamp("completed_at"),
   // Duration in milliseconds
   durationMs: text("duration_ms"),
-});
+})
 
 // Relations
 export const workflowsRelations = relations(workflows, ({ many }) => ({
   executions: many(workflowExecutions),
-}));
+}))
 
 export const workflowExecutionsRelations = relations(
   workflowExecutions,
@@ -86,8 +90,8 @@ export const workflowExecutionsRelations = relations(
       references: [workflows.id],
     }),
     logs: many(workflowExecutionLogs),
-  })
-);
+  }),
+)
 
 export const workflowExecutionLogsRelations = relations(
   workflowExecutionLogs,
@@ -96,14 +100,13 @@ export const workflowExecutionLogsRelations = relations(
       fields: [workflowExecutionLogs.executionId],
       references: [workflowExecutions.id],
     }),
-  })
-);
+  }),
+)
 
 // Type exports
-export type Workflow = typeof workflows.$inferSelect;
-export type NewWorkflow = typeof workflows.$inferInsert;
-export type WorkflowExecution = typeof workflowExecutions.$inferSelect;
-export type NewWorkflowExecution = typeof workflowExecutions.$inferInsert;
-export type WorkflowExecutionLog = typeof workflowExecutionLogs.$inferSelect;
-export type NewWorkflowExecutionLog = typeof workflowExecutionLogs.$inferInsert;
-
+export type Workflow = typeof workflows.$inferSelect
+export type NewWorkflow = typeof workflows.$inferInsert
+export type WorkflowExecution = typeof workflowExecutions.$inferSelect
+export type NewWorkflowExecution = typeof workflowExecutions.$inferInsert
+export type WorkflowExecutionLog = typeof workflowExecutionLogs.$inferSelect
+export type NewWorkflowExecutionLog = typeof workflowExecutionLogs.$inferInsert

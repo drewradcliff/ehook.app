@@ -10,6 +10,7 @@ import { WorkflowCanvas } from "@/components/workflow/workflow-canvas"
 import {
   currentWorkflowIdAtom,
   currentWorkflowNameAtom,
+  currentWorkflowWebhookIdAtom,
   edgesAtom,
   hasUnsavedChangesAtom,
   nodesAtom,
@@ -31,6 +32,7 @@ function WorkflowEditor({ workflowId }: { workflowId: string }) {
   const setEdges = useSetAtom(edgesAtom)
   const setCurrentWorkflowId = useSetAtom(currentWorkflowIdAtom)
   const setCurrentWorkflowName = useSetAtom(currentWorkflowNameAtom)
+  const setCurrentWorkflowWebhookId = useSetAtom(currentWorkflowWebhookIdAtom)
   const setHasUnsavedChanges = useSetAtom(hasUnsavedChangesAtom)
 
   useEffect(() => {
@@ -69,6 +71,7 @@ function WorkflowEditor({ workflowId }: { workflowId: string }) {
           setEdges(parsedEdges)
           setCurrentWorkflowId(workflow.id)
           setCurrentWorkflowName(workflow.name || "Untitled Workflow")
+          setCurrentWorkflowWebhookId(workflow.webhookId || null)
           setHasUnsavedChanges(false)
         } else if (response.status === 404) {
           // Workflow not found - redirect to workflows list
@@ -87,6 +90,7 @@ function WorkflowEditor({ workflowId }: { workflowId: string }) {
     setEdges,
     setCurrentWorkflowId,
     setCurrentWorkflowName,
+    setCurrentWorkflowWebhookId,
     setHasUnsavedChanges,
   ])
 

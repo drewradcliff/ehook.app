@@ -17,6 +17,7 @@ import {
   clearNodeStatusesAtom,
   currentWorkflowIdAtom,
   currentWorkflowNameAtom,
+  currentWorkflowWebhookIdAtom,
   deleteEdgeAtom,
   deleteNodeAtom,
   deleteSelectedItemsAtom,
@@ -43,7 +44,6 @@ import { ActionGrid } from "./config/action-grid"
 import { ConditionConfig } from "./config/condition-config"
 import { TriggerConfig } from "./config/trigger-config"
 import { WorkflowRuns } from "./workflow-runs"
-
 
 // Multi-selection panel component
 const MultiSelectionPanel = ({
@@ -130,6 +130,7 @@ export const PanelInner = () => {
   const [currentWorkflowName, setCurrentWorkflowName] = useAtom(
     currentWorkflowNameAtom,
   )
+  const [currentWorkflowWebhookId] = useAtom(currentWorkflowWebhookIdAtom)
   const updateNodeData = useSetAtom(updateNodeDataAtom)
   const deleteNode = useSetAtom(deleteNodeAtom)
   const deleteEdge = useSetAtom(deleteEdgeAtom)
@@ -512,6 +513,7 @@ export const PanelInner = () => {
                 disabled={isGenerating}
                 onUpdateConfig={handleUpdateConfig}
                 workflowId={currentWorkflowId ?? undefined}
+                webhookId={currentWorkflowWebhookId ?? undefined}
               />
             )}
 
