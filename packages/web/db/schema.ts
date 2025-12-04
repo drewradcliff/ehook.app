@@ -13,6 +13,8 @@ export const workflows = pgTable("workflows", {
   webhookId: text("webhook_id")
     .notNull()
     .$defaultFn(() => uuidv4()),
+  // QStash schedule ID for scheduled workflows
+  scheduleId: text("schedule_id"),
   // Store React Flow nodes as JSON
   nodes: jsonb("nodes").notNull().$type<unknown[]>().default([]),
   // Store React Flow edges as JSON
