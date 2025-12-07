@@ -101,7 +101,12 @@ function WorkflowEditor({ workflowId }: { workflowId: string }) {
           <WorkflowCanvas />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
+        <ResizablePanel
+          className="overflow-hidden"
+          defaultSize={30}
+          minSize={20}
+          maxSize={50}
+        >
           <NodeConfigPanel />
         </ResizablePanel>
       </ResizablePanelGroup>

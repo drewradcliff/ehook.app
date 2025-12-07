@@ -81,7 +81,7 @@ const MultiSelectionPanel = ({
         <div className="flex h-14 w-full shrink-0 items-center border-b bg-transparent px-4">
           <h2 className="text-foreground font-semibold">Properties</h2>
         </div>
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
           <div className="space-y-2">
             <Label>Selection</Label>
             <p className="text-muted-foreground text-sm">
@@ -288,7 +288,7 @@ export const PanelInner = () => {
           <div className="flex h-14 w-full shrink-0 items-center border-b bg-transparent px-4">
             <h2 className="text-foreground font-semibold">Properties</h2>
           </div>
-          <div className="flex-1 space-y-4 overflow-y-auto p-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
             <div className="space-y-2">
               <Label className="ml-1" htmlFor="edge-id">
                 Edge ID
@@ -348,7 +348,7 @@ export const PanelInner = () => {
     return (
       <>
         <Tabs
-          className="size-full"
+          className="flex size-full flex-col"
           defaultValue="properties"
           onValueChange={setActiveTab}
           value={activeTab}
@@ -368,67 +368,77 @@ export const PanelInner = () => {
             </TabsTrigger>
           </TabsList>
           <TabsContent
-            className="flex flex-col overflow-hidden"
+            className="relative flex-1 overflow-hidden"
             value="properties"
           >
-            <div className="flex-1 space-y-4 overflow-y-auto p-4">
-              <div className="space-y-2">
-                <Label className="ml-1" htmlFor="workflow-name">
-                  Workflow Name
-                </Label>
-                <Input
-                  id="workflow-name"
-                  onChange={(e) => handleUpdateWorkspaceName(e.target.value)}
-                  value={currentWorkflowName}
-                />
+            <div className="absolute inset-0 flex flex-col">
+              <div className="flex-1 space-y-4 overflow-y-auto p-4">
+                <div className="space-y-2">
+                  <Label className="ml-1" htmlFor="workflow-name">
+                    Workflow Name
+                  </Label>
+                  <Input
+                    id="workflow-name"
+                    onChange={(e) => handleUpdateWorkspaceName(e.target.value)}
+                    value={currentWorkflowName}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="ml-1" htmlFor="workflow-id">
+                    Workflow ID
+                  </Label>
+                  <Input
+                    disabled
+                    id="workflow-id"
+                    value={currentWorkflowId || "Not saved"}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="ml-1" htmlFor="workflow-id">
-                  Workflow ID
-                </Label>
-                <Input
-                  disabled
-                  id="workflow-id"
-                  value={currentWorkflowId || "Not saved"}
-                />
+              <div className="flex shrink-0 items-center gap-2 border-t p-4">
+                <Button
+                  onClick={() => setShowClearDialog(true)}
+                  variant="ghost"
+                >
+                  <Eraser className="size-4" />
+                  Clear
+                </Button>
+                <Button
+                  onClick={() => setShowDeleteDialog(true)}
+                  variant="ghost"
+                >
+                  <Trash2 className="size-4" />
+                  Delete
+                </Button>
               </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-2 border-t p-4">
-              <Button onClick={() => setShowClearDialog(true)} variant="ghost">
-                <Eraser className="size-4" />
-                Clear
-              </Button>
-              <Button onClick={() => setShowDeleteDialog(true)} variant="ghost">
-                <Trash2 className="size-4" />
-                Delete
-              </Button>
             </div>
           </TabsContent>
-          <TabsContent className="flex flex-col overflow-hidden" value="runs">
-            <div className="flex-1 space-y-4 overflow-y-auto p-4">
-              <WorkflowRuns
-                isActive={activeTab === "runs"}
-                onRefreshRef={refreshRunsRef}
-              />
-            </div>
-            <div className="flex shrink-0 items-center gap-2 border-t p-4">
-              <Button
-                disabled={isRefreshing}
-                onClick={handleRefreshRuns}
-                size="icon"
-                variant="ghost"
-              >
-                <RefreshCw
-                  className={`size-4 ${isRefreshing ? "animate-spin" : ""}`}
+          <TabsContent className="relative flex-1 overflow-hidden" value="runs">
+            <div className="absolute inset-0 flex flex-col">
+              <div className="flex-1 space-y-4 overflow-y-auto p-4">
+                <WorkflowRuns
+                  isActive={activeTab === "runs"}
+                  onRefreshRef={refreshRunsRef}
                 />
-              </Button>
-              <Button
-                onClick={() => setShowDeleteRunsAlert(true)}
-                size="icon"
-                variant="ghost"
-              >
-                <Trash2 className="size-4" />
-              </Button>
+              </div>
+              <div className="flex shrink-0 items-center gap-2 border-t p-4">
+                <Button
+                  disabled={isRefreshing}
+                  onClick={handleRefreshRuns}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <RefreshCw
+                    className={`size-4 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
+                </Button>
+                <Button
+                  onClick={() => setShowDeleteRunsAlert(true)}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
@@ -483,7 +493,7 @@ export const PanelInner = () => {
   return (
     <>
       <Tabs
-        className="size-full"
+        className="flex size-full flex-col"
         defaultValue="properties"
         onValueChange={setActiveTab}
         value={activeTab}
@@ -503,131 +513,135 @@ export const PanelInner = () => {
           </TabsTrigger>
         </TabsList>
         <TabsContent
-          className="flex flex-col overflow-hidden"
+          className="relative flex-1 overflow-hidden"
           value="properties"
         >
-          <div className="flex-1 space-y-4 overflow-y-auto p-4">
-            {selectedNode.data.type === "trigger" && (
-              <TriggerConfig
-                config={selectedNode.data.config || {}}
-                disabled={isGenerating}
-                onUpdateConfig={handleUpdateConfig}
-                workflowId={currentWorkflowId ?? undefined}
-                webhookId={currentWorkflowWebhookId ?? undefined}
-                nodeLabel={selectedNode.data.label}
-              />
+          <div className="absolute inset-0 flex flex-col">
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              {selectedNode.data.type === "trigger" && (
+                <TriggerConfig
+                  config={selectedNode.data.config || {}}
+                  disabled={isGenerating}
+                  onUpdateConfig={handleUpdateConfig}
+                  workflowId={currentWorkflowId ?? undefined}
+                  webhookId={currentWorkflowWebhookId ?? undefined}
+                  nodeLabel={selectedNode.data.label}
+                />
+              )}
+
+              {selectedNode.data.type === "action" &&
+              !selectedNode.data.config?.actionType ? (
+                <ActionGrid
+                  disabled={isGenerating}
+                  onSelectAction={(actionType) =>
+                    handleUpdateConfig("actionType", actionType)
+                  }
+                />
+              ) : null}
+
+              {selectedNode.data.type === "action" &&
+              selectedNode.data.config?.actionType === "Condition" ? (
+                <ConditionConfig
+                  config={selectedNode.data.config || {}}
+                  disabled={isGenerating}
+                  onUpdateConfig={handleUpdateConfig}
+                />
+              ) : null}
+
+              {selectedNode.data.type === "action" &&
+              selectedNode.data.config?.actionType &&
+              selectedNode.data.config?.actionType !== "Condition" ? (
+                <ActionConfig
+                  config={selectedNode.data.config || {}}
+                  disabled={isGenerating}
+                  onUpdateConfig={handleUpdateConfig}
+                />
+              ) : null}
+
+              {selectedNode.data.type !== "action" ||
+              selectedNode.data.config?.actionType ? (
+                <>
+                  <div className="space-y-2">
+                    <Label className="ml-1" htmlFor="label">
+                      Label
+                    </Label>
+                    <Input
+                      disabled={isGenerating}
+                      id="label"
+                      onChange={(e) => handleUpdateLabel(e.target.value)}
+                      value={selectedNode.data.label}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="ml-1" htmlFor="description">
+                      Description
+                    </Label>
+                    <Input
+                      disabled={isGenerating}
+                      id="description"
+                      onChange={(e) => handleUpdateDescription(e.target.value)}
+                      placeholder="Optional description"
+                      value={selectedNode.data.description || ""}
+                    />
+                  </div>
+                </>
+              ) : null}
+            </div>
+            {selectedNode.data.type === "action" && (
+              <div className="flex shrink-0 items-center justify-between border-t p-4">
+                <Button
+                  onClick={() => setShowDeleteNodeAlert(true)}
+                  size="sm"
+                  variant="ghost"
+                >
+                  <Trash2 className="mr-2 size-4" />
+                  Delete Step
+                </Button>
+              </div>
             )}
-
-            {selectedNode.data.type === "action" &&
-            !selectedNode.data.config?.actionType ? (
-              <ActionGrid
-                disabled={isGenerating}
-                onSelectAction={(actionType) =>
-                  handleUpdateConfig("actionType", actionType)
-                }
-              />
-            ) : null}
-
-            {selectedNode.data.type === "action" &&
-            selectedNode.data.config?.actionType === "Condition" ? (
-              <ConditionConfig
-                config={selectedNode.data.config || {}}
-                disabled={isGenerating}
-                onUpdateConfig={handleUpdateConfig}
-              />
-            ) : null}
-
-            {selectedNode.data.type === "action" &&
-            selectedNode.data.config?.actionType &&
-            selectedNode.data.config?.actionType !== "Condition" ? (
-              <ActionConfig
-                config={selectedNode.data.config || {}}
-                disabled={isGenerating}
-                onUpdateConfig={handleUpdateConfig}
-              />
-            ) : null}
-
-            {selectedNode.data.type !== "action" ||
-            selectedNode.data.config?.actionType ? (
-              <>
-                <div className="space-y-2">
-                  <Label className="ml-1" htmlFor="label">
-                    Label
-                  </Label>
-                  <Input
-                    disabled={isGenerating}
-                    id="label"
-                    onChange={(e) => handleUpdateLabel(e.target.value)}
-                    value={selectedNode.data.label}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="ml-1" htmlFor="description">
-                    Description
-                  </Label>
-                  <Input
-                    disabled={isGenerating}
-                    id="description"
-                    onChange={(e) => handleUpdateDescription(e.target.value)}
-                    placeholder="Optional description"
-                    value={selectedNode.data.description || ""}
-                  />
-                </div>
-              </>
-            ) : null}
+            {selectedNode.data.type === "trigger" && (
+              <div className="shrink-0 border-t p-4">
+                <Button
+                  onClick={() => setShowDeleteNodeAlert(true)}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            )}
           </div>
-          {selectedNode.data.type === "action" && (
-            <div className="flex shrink-0 items-center justify-between border-t p-4">
+        </TabsContent>
+        <TabsContent className="relative flex-1 overflow-hidden" value="runs">
+          <div className="absolute inset-0 flex flex-col">
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              <WorkflowRuns
+                isActive={activeTab === "runs"}
+                onRefreshRef={refreshRunsRef}
+              />
+            </div>
+            <div className="flex shrink-0 items-center gap-2 border-t p-4">
               <Button
-                onClick={() => setShowDeleteNodeAlert(true)}
+                disabled={isRefreshing}
+                onClick={handleRefreshRuns}
                 size="sm"
                 variant="ghost"
               >
-                <Trash2 className="mr-2 size-4" />
-                Delete Step
+                <RefreshCw
+                  className={`mr-2 size-4 ${isRefreshing ? "animate-spin" : ""}`}
+                />
+                Refresh Runs
               </Button>
-            </div>
-          )}
-          {selectedNode.data.type === "trigger" && (
-            <div className="shrink-0 border-t p-4">
               <Button
-                onClick={() => setShowDeleteNodeAlert(true)}
-                size="icon"
+                onClick={() => setShowDeleteRunsAlert(true)}
+                size="sm"
                 variant="ghost"
               >
-                <Trash2 className="size-4" />
+                <Eraser className="mr-2 size-4" />
+                Clear All Runs
               </Button>
             </div>
-          )}
-        </TabsContent>
-        <TabsContent className="flex flex-col overflow-hidden" value="runs">
-          <div className="flex-1 space-y-4 overflow-y-auto p-4">
-            <WorkflowRuns
-              isActive={activeTab === "runs"}
-              onRefreshRef={refreshRunsRef}
-            />
-          </div>
-          <div className="flex shrink-0 items-center gap-2 border-t p-4">
-            <Button
-              disabled={isRefreshing}
-              onClick={handleRefreshRuns}
-              size="sm"
-              variant="ghost"
-            >
-              <RefreshCw
-                className={`mr-2 size-4 ${isRefreshing ? "animate-spin" : ""}`}
-              />
-              Refresh Runs
-            </Button>
-            <Button
-              onClick={() => setShowDeleteRunsAlert(true)}
-              size="sm"
-              variant="ghost"
-            >
-              <Eraser className="mr-2 size-4" />
-              Clear All Runs
-            </Button>
           </div>
         </TabsContent>
       </Tabs>
@@ -695,7 +709,7 @@ export const NodeConfigPanel = () => {
       </div>
 
       {/* Desktop: Docked sidebar - now resizable */}
-      <div className="bg-background hidden size-full flex-col md:flex">
+      <div className="bg-background hidden size-full flex-col overflow-hidden md:flex">
         <PanelInner />
       </div>
     </>
