@@ -154,8 +154,37 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
     }
 
     try {
+      // Find trigger node and get mock request data if it's a webhook trigger
+      const triggerNode = nodes.find((node) => node.data.type === "trigger")
+      let triggerInput: Record<string, unknown> = {}
+
+      if (triggerNode?.data.config?.triggerType === "Webhook") {
+        const mockRequest = triggerNode.data.config.webhookMockRequest as
+          | string
+          | undefined
+        if (mockRequest) {
+          try {
+            const parsedMock = JSON.parse(mockRequest) as Record<
+              string,
+              unknown
+            >
+            // Wrap the mock data in a body field to match real webhook structure
+            triggerInput = {
+              body: parsedMock,
+              method: "POST",
+              headers: {},
+              query: {},
+              timestamp: Date.now(),
+            }
+          } catch {
+            // If parsing fails, use as-is
+            triggerInput = { body: mockRequest }
+          }
+        }
+      }
+
       // Start the execution via API
-      const result = await api.workflow.execute(currentWorkflowId)
+      const result = await api.workflow.execute(currentWorkflowId, triggerInput)
 
       // Select the new execution
       setSelectedExecutionId(result.executionId)

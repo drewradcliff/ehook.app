@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+import Editor from "@monaco-editor/react"
 import { Clock, Copy, Play, Webhook } from "lucide-react"
 import { toast } from "sonner"
 import { SchemaBuilder, type SchemaField } from "./schema-builder"
@@ -21,6 +21,7 @@ type TriggerConfigProps = {
   disabled: boolean
   workflowId?: string
   webhookId?: string
+  nodeLabel?: string
 }
 
 export function TriggerConfig({
@@ -28,7 +29,11 @@ export function TriggerConfig({
   onUpdateConfig,
   disabled,
   webhookId,
+  nodeLabel,
 }: TriggerConfigProps) {
+  // Use the node label for the example, defaulting to trigger type or "Trigger"
+  const labelForExample =
+    nodeLabel || (config?.triggerType as string) || "Trigger"
   const webhookUrl = webhookId
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/api/webhook/${webhookId}`
     : ""
@@ -119,19 +124,38 @@ export function TriggerConfig({
           </div>
           <div className="space-y-2">
             <Label htmlFor="webhookMockRequest">Mock Request (Optional)</Label>
-            <Textarea
-              disabled={disabled}
-              id="webhookMockRequest"
-              onChange={(e) =>
-                onUpdateConfig("webhookMockRequest", e.target.value)
-              }
-              placeholder='{"key": "value"}'
-              rows={6}
-              className="font-mono text-xs"
-              value={(config?.webhookMockRequest as string) || ""}
-            />
+            <div className="overflow-hidden rounded-md border">
+              <Editor
+                height="200px"
+                defaultLanguage="json"
+                value={(config?.webhookMockRequest as string) || "{}"}
+                onChange={(value) =>
+                  onUpdateConfig("webhookMockRequest", value || "{}")
+                }
+                options={{
+                  readOnly: disabled,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  fontSize: 12,
+                  lineNumbers: "on",
+                  folding: true,
+                  wordWrap: "on",
+                  automaticLayout: true,
+                  contextmenu: true,
+                  formatOnPaste: true,
+                  formatOnType: true,
+                  tabSize: 2,
+                  insertSpaces: true,
+                }}
+                theme="vs"
+              />
+            </div>
             <p className="text-muted-foreground text-xs">
-              Enter a sample JSON payload to test the webhook trigger.
+              Enter sample JSON to test the workflow. Reference values in other
+              nodes using{" "}
+              <code className="bg-muted rounded px-1">
+                {`{{${labelForExample}.body.fieldName}}`}
+              </code>
             </p>
           </div>
         </>

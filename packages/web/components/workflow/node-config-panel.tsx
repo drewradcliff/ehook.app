@@ -514,6 +514,7 @@ export const PanelInner = () => {
                 onUpdateConfig={handleUpdateConfig}
                 workflowId={currentWorkflowId ?? undefined}
                 webhookId={currentWorkflowWebhookId ?? undefined}
+                nodeLabel={selectedNode.data.label}
               />
             )}
 

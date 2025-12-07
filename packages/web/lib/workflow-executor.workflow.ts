@@ -30,7 +30,9 @@ export type WorkflowExecutionInput = {
 
 /**
  * Process template variables in config
- * Replaces {{@nodeId:Label.field}} with actual values from previous node outputs
+ * Supports two patterns:
+ * - {{@nodeId:Label.field}} - Full pattern with node ID
+ * - {{NodeLabel.field}} - Simpler pattern using node label only
  */
 function processTemplates(
   config: Record<string, unknown>,
@@ -38,12 +40,52 @@ function processTemplates(
 ): Record<string, unknown> {
   const processed: Record<string, unknown> = {}
 
+  // Helper to resolve a field path from data
+  const resolveFieldPath = (data: unknown, fieldPath: string): string => {
+    if (data === null || data === undefined) {
+      return ""
+    }
+
+    const fields = fieldPath.split(".")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let current: any = data
+
+    for (const field of fields) {
+      if (current && typeof current === "object") {
+        current = current[field]
+      } else {
+        return ""
+      }
+    }
+
+    if (current === null || current === undefined) {
+      return ""
+    }
+    if (typeof current === "object") {
+      return JSON.stringify(current)
+    }
+    return String(current)
+  }
+
+  // Helper to stringify data
+  const stringifyData = (data: unknown): string => {
+    if (data === null || data === undefined) {
+      return ""
+    }
+    if (typeof data === "object") {
+      return JSON.stringify(data)
+    }
+    return String(data)
+  }
+
   for (const [key, value] of Object.entries(config)) {
     if (typeof value === "string") {
       let processedValue = value
-      const templatePattern = /\{\{@([^:]+):([^}]+)\}\}/g
+
+      // Pattern 1: {{@nodeId:Label.field}} - Full pattern with node ID
+      const fullTemplatePattern = /\{\{@([^:]+):([^}]+)\}\}/g
       processedValue = processedValue.replace(
-        templatePattern,
+        fullTemplatePattern,
         (match, nodeId, rest) => {
           const sanitizedNodeId = nodeId.replace(/[^a-zA-Z0-9]/g, "_")
           const output = outputs[sanitizedNodeId]
@@ -53,40 +95,33 @@ function processTemplates(
 
           const dotIndex = rest.indexOf(".")
           if (dotIndex === -1) {
-            const data = output.data
-            if (data === null || data === undefined) {
-              return ""
-            }
-            if (typeof data === "object") {
-              return JSON.stringify(data)
-            }
-            return String(data)
-          }
-
-          if (output.data === null || output.data === undefined) {
-            return ""
+            return stringifyData(output.data)
           }
 
           const fieldPath = rest.substring(dotIndex + 1)
-          const fields = fieldPath.split(".")
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          let current: any = output.data
+          return resolveFieldPath(output.data, fieldPath)
+        },
+      )
 
-          for (const field of fields) {
-            if (current && typeof current === "object") {
-              current = current[field]
-            } else {
-              return ""
-            }
+      // Pattern 2: {{NodeLabel.field}} - Simpler pattern using node label
+      // Match {{Label}} or {{Label.field.path}} but not {{@...}} patterns
+      const simpleLabelPattern = /\{\{(?!@)([^.}]+)(\.([^}]+))?\}\}/g
+      processedValue = processedValue.replace(
+        simpleLabelPattern,
+        (match, label, _dotPart, fieldPath) => {
+          // Find output by label (case-insensitive)
+          const output = Object.values(outputs).find(
+            (o) => o.label.toLowerCase() === label.toLowerCase(),
+          )
+          if (!output) {
+            return match
           }
 
-          if (current === null || current === undefined) {
-            return ""
+          if (!fieldPath) {
+            return stringifyData(output.data)
           }
-          if (typeof current === "object") {
-            return JSON.stringify(current)
-          }
-          return String(current)
+
+          return resolveFieldPath(output.data, fieldPath)
         },
       )
 
@@ -275,9 +310,10 @@ export async function executeWorkflow(
       results[nodeId] = result
 
       // Store outputs for template processing
+      // Use getNodeName for better label fallback (uses trigger type, action type, etc.)
       const sanitizedNodeId = nodeId.replace(/[^a-zA-Z0-9]/g, "_")
       outputs[sanitizedNodeId] = {
-        label: node.data.label || nodeId,
+        label: getNodeName(node),
         data: result.data,
       }
 

@@ -45,7 +45,7 @@ function SendEmailFields({
           disabled={disabled}
           id="emailTo"
           onChange={(e) => onUpdateConfig("emailTo", e.target.value)}
-          placeholder="user@example.com or {{NodeName.email}}"
+          placeholder="user@example.com or {{Trigger.body.email}}"
           value={(config?.emailTo as string) || ""}
         />
       </div>
@@ -57,7 +57,7 @@ function SendEmailFields({
           disabled={disabled}
           id="emailSubject"
           onChange={(e) => onUpdateConfig("emailSubject", e.target.value)}
-          placeholder="Subject or {{NodeName.title}}"
+          placeholder="Subject or {{Trigger.body.subject}}"
           value={(config?.emailSubject as string) || ""}
         />
       </div>
@@ -69,7 +69,7 @@ function SendEmailFields({
           disabled={disabled}
           id="emailBody"
           onChange={(e) => onUpdateConfig("emailBody", e.target.value)}
-          placeholder="Email body. Use {{NodeName.field}} to insert data from previous nodes."
+          placeholder="Use {{NodeLabel.field}} to insert data, e.g. {{Trigger.body.message}}"
           rows={4}
           value={(config?.emailBody as string) || ""}
         />
@@ -122,7 +122,7 @@ function HttpRequestFields({
           disabled={disabled}
           id="endpoint"
           onChange={(e) => onUpdateConfig("endpoint", e.target.value)}
-          placeholder="https://api.example.com/endpoint or {{NodeName.url}}"
+          placeholder="https://api.example.com/endpoint or {{Trigger.body.url}}"
           value={(config?.endpoint as string) || ""}
         />
       </div>
