@@ -33,15 +33,20 @@ function getTriggerConfig(nodes: unknown[]): TriggerConfig | null {
  * Get the base URL for the application
  */
 function getBaseUrl(): string {
+  let url: string
+
   // In production, use NEXT_PUBLIC_APP_URL or VERCEL_URL
   if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL
+    url = process.env.NEXT_PUBLIC_APP_URL
+  } else if (process.env.VERCEL_URL) {
+    url = `https://${process.env.VERCEL_URL}`
+  } else {
+    // Fallback for development
+    url = "http://localhost:3000"
   }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`
-  }
-  // Fallback for development
-  return "http://localhost:3000"
+
+  // Remove trailing slash to avoid double slashes when concatenating paths
+  return url.replace(/\/$/, "")
 }
 
 export type ManageScheduleResult =
