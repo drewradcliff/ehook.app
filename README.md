@@ -3,6 +3,7 @@
 A real-time webhook inspection tool that allows you to view and debug webhook payloads with a beautiful UI.
 
 This project uses a Bun workspace monorepo structure:
+
 - `packages/web/` - Next.js dashboard application
 - `packages/cli/` - CLI tool
 
@@ -50,6 +51,7 @@ bun run db:push  # Push schema to database
 ```
 
 Other database commands:
+
 - `bun run db:generate` - Generate migrations from schema changes
 - `bun run db:migrate` - Run migrations
 - `bun run db:studio` - Open Drizzle Studio to browse data
@@ -80,6 +82,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - **Syntax Highlighting**: JSON payloads are displayed with syntax highlighting
 - **History**: Last 50 webhook events are stored and can be reviewed
 - **Multi-tab Support**: All tabs with the same UUID receive real-time updates
+- **Workflows**: Visual workflow builder with triggers (Manual, Schedule, Webhook) and actions (HTTP Request, Send Email). Powered by Vercel Workflows for durability and execution tracking
 
 ## Tech Stack
 

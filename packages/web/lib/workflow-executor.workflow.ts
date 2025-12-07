@@ -18,7 +18,10 @@ type ExecutionResult = {
   error?: string
 }
 
-type NodeOutputs = Record<string, { label: string; data: unknown }>
+type NodeOutputs = Record<
+  string,
+  { label: string; nodeType: string; data: unknown }
+>
 
 export type WorkflowExecutionInput = {
   nodes: WorkflowNode[]
@@ -110,8 +113,11 @@ function processTemplates(
         simpleLabelPattern,
         (match, label, _dotPart, fieldPath) => {
           // Find output by label (case-insensitive)
+          // Also match by node type (e.g., "Trigger" matches any trigger node)
           const output = Object.values(outputs).find(
-            (o) => o.label.toLowerCase() === label.toLowerCase(),
+            (o) =>
+              o.label.toLowerCase() === label.toLowerCase() ||
+              o.nodeType.toLowerCase() === label.toLowerCase(),
           )
           if (!output) {
             return match
@@ -314,6 +320,7 @@ export async function executeWorkflow(
       const sanitizedNodeId = nodeId.replace(/[^a-zA-Z0-9]/g, "_")
       outputs[sanitizedNodeId] = {
         label: getNodeName(node),
+        nodeType: node.data.type, // Store node type for matching "Trigger" or "Action"
         data: result.data,
       }
 
