@@ -23,8 +23,8 @@ const menuItems = [
   {
     title: "Workflows",
     href: "/workflows",
-    icon: Workflow
-  }
+    icon: Workflow,
+  },
 ]
 
 export function AppSidebar() {

@@ -14,6 +14,7 @@ import {
   currentWorkflowIdAtom,
   currentWorkflowNameAtom,
 } from "@/lib/workflow-store"
+import Editor from "@monaco-editor/react"
 import { useAtom } from "jotai"
 import { Mail, Zap } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -127,27 +128,61 @@ function HttpRequestFields({
       </div>
       <div className="space-y-2">
         <Label htmlFor="httpHeaders">Headers (JSON)</Label>
-        <Textarea
-          disabled={disabled}
-          id="httpHeaders"
-          onChange={(e) => onUpdateConfig("httpHeaders", e.target.value)}
-          placeholder='{"Content-Type": "application/json"}'
-          rows={4}
-          className="font-mono text-xs"
-          value={(config?.httpHeaders as string) || "{}"}
-        />
+        <div className="overflow-hidden rounded-md border">
+          <Editor
+            height="120px"
+            defaultLanguage="json"
+            value={(config?.httpHeaders as string) || "{}"}
+            onChange={(value) => onUpdateConfig("httpHeaders", value || "{}")}
+            options={{
+              readOnly: disabled,
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              fontSize: 12,
+              lineNumbers: "on",
+              folding: true,
+              wordWrap: "on",
+              automaticLayout: true,
+              contextmenu: true,
+              formatOnPaste: true,
+              formatOnType: true,
+              tabSize: 2,
+              insertSpaces: true,
+            }}
+            theme="vs"
+          />
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="httpBody">Body (JSON)</Label>
-        <Textarea
-          disabled={config?.httpMethod === "GET" || disabled}
-          id="httpBody"
-          onChange={(e) => onUpdateConfig("httpBody", e.target.value)}
-          placeholder='{"key": "value"}'
-          rows={6}
-          className={`font-mono text-xs ${config?.httpMethod === "GET" ? "opacity-50" : ""}`}
-          value={(config?.httpBody as string) || "{}"}
-        />
+        <div
+          className={`overflow-hidden rounded-md border ${
+            config?.httpMethod === "GET" ? "opacity-50" : ""
+          }`}
+        >
+          <Editor
+            height="180px"
+            defaultLanguage="json"
+            value={(config?.httpBody as string) || "{}"}
+            onChange={(value) => onUpdateConfig("httpBody", value || "{}")}
+            options={{
+              readOnly: config?.httpMethod === "GET" || disabled,
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              fontSize: 12,
+              lineNumbers: "on",
+              folding: true,
+              wordWrap: "on",
+              automaticLayout: true,
+              contextmenu: true,
+              formatOnPaste: true,
+              formatOnType: true,
+              tabSize: 2,
+              insertSpaces: true,
+            }}
+            theme="vs"
+          />
+        </div>
         {config?.httpMethod === "GET" && (
           <p className="text-muted-foreground text-xs">
             Body is disabled for GET requests
