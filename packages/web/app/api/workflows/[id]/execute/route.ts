@@ -1,6 +1,6 @@
 import { db } from "@/db"
 import { workflowExecutions, workflows } from "@/db/schema"
-import { executeWorkflow } from "@/lib/workflow-executor"
+import { executeWorkflow } from "@/lib/workflow-executor.workflow"
 import type { WorkflowEdge, WorkflowNode } from "@/lib/workflow-store"
 import { eq } from "drizzle-orm"
 import { NextResponse } from "next/server"
