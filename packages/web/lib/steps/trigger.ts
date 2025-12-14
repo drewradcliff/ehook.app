@@ -1,10 +1,8 @@
 /**
  * Trigger Step
- * Handles workflow triggers with "use step" directive for Vercel Workflows
+ * Handles workflow triggers with "use step" directive for Workflow DevKit
  * Also handles workflow completion logging
  */
-import "server-only"
-
 import {
   logWorkflowComplete,
   type StepInput,
@@ -53,13 +51,10 @@ async function trigger(input: TriggerInput): Promise<TriggerResult> {
 }
 
 /**
- * Trigger Step with Vercel Workflow support
+ * Trigger Step with Workflow DevKit support
  * Uses "use step" directive for durability and observability
  */
-// eslint-disable-next-line @typescript-eslint/require-await
 export async function triggerStep(input: TriggerInput): Promise<TriggerResult> {
   "use step"
   return withStepLogging(input, () => trigger(input))
 }
-triggerStep.maxRetries = 0
-

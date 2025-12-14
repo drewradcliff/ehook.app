@@ -45,6 +45,7 @@
     "tailwind-merge": "^3.3.1",
     "uuid": "^13.0.0",
     "vaul": "^1.1.2",
+    "workflow": "^4.0.1-beta.29",
     "zod": "^4.1.12"
   },
   "devDependencies": {

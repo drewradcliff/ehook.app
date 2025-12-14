@@ -1,9 +1,7 @@
 /**
- * Workflow executor using "use workflow" directive for Vercel Workflows
+ * Workflow executor using "use workflow" directive for Workflow DevKit
  * Provides durability, observability, and longer execution times
  */
-import "server-only"
-
 import {
   httpRequestStep,
   sendEmailStep,
@@ -189,7 +187,7 @@ async function executeActionStep(
 }
 
 /**
- * Main workflow executor function with Vercel Workflow support
+ * Main workflow executor function with Workflow DevKit support
  * Uses "use workflow" directive for durability and observability
  */
 export async function executeWorkflow(

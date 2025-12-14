@@ -3,8 +3,6 @@
  * These functions are called FROM INSIDE steps (within "use step" context)
  * Uses direct database calls for security (no HTTP endpoint)
  */
-import "server-only"
-
 import { db } from "@/db"
 import { workflowExecutionLogs, workflowExecutions } from "@/db/schema"
 import { eq } from "drizzle-orm"

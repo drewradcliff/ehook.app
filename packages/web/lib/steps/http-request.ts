@@ -1,9 +1,8 @@
 /**
  * HTTP Request Step
- * Makes an HTTP request to an endpoint with "use step" directive for Vercel Workflows
+ * Makes an HTTP request to an endpoint with "use step" directive for Workflow DevKit
  */
-import "server-only"
-
+import { FatalError } from "workflow"
 import { type StepInput, withStepLogging } from "./step-handler"
 
 type HttpRequestResult =
@@ -57,11 +56,9 @@ async function parseResponse(response: Response): Promise<unknown> {
 async function httpRequest(
   input: HttpRequestInput,
 ): Promise<HttpRequestResult> {
+  // Configuration errors should not be retried
   if (!input.endpoint) {
-    return {
-      success: false,
-      error: "HTTP request failed: URL is required",
-    }
+    throw new FatalError("HTTP request failed: URL is required")
   }
 
   try {
@@ -73,6 +70,13 @@ async function httpRequest(
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "Unknown error")
+      // 4xx errors are client errors and shouldn't be retried
+      if (response.status >= 400 && response.status < 500) {
+        throw new FatalError(
+          `HTTP request failed with status ${response.status}: ${errorText}`,
+        )
+      }
+      // 5xx errors might be transient and could be retried
       return {
         success: false,
         error: `HTTP request failed with status ${response.status}: ${errorText}`,
@@ -83,6 +87,10 @@ async function httpRequest(
     const data = await parseResponse(response)
     return { success: true, data, status: response.status }
   } catch (error) {
+    // Re-throw FatalErrors as-is
+    if (error instanceof FatalError) {
+      throw error
+    }
     return {
       success: false,
       error: `HTTP request failed: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -91,14 +99,12 @@ async function httpRequest(
 }
 
 /**
- * HTTP Request Step with Vercel Workflow support
+ * HTTP Request Step with Workflow DevKit support
  * Uses "use step" directive for durability and observability
  */
-// eslint-disable-next-line @typescript-eslint/require-await
 export async function httpRequestStep(
   input: HttpRequestInput,
 ): Promise<HttpRequestResult> {
   "use step"
   return withStepLogging(input, () => httpRequest(input))
 }
-httpRequestStep.maxRetries = 0

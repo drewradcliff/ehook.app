@@ -1,10 +1,9 @@
 /**
  * Send Email Step
- * Sends an email using Inbound SDK with "use step" directive for Vercel Workflows
+ * Sends an email using Inbound SDK with "use step" directive for Workflow DevKit
  */
-import "server-only"
-
 import { Inbound } from "@inboundemail/sdk"
+import { FatalError } from "workflow"
 import { type StepInput, withStepLogging } from "./step-handler"
 
 type SendEmailResult =
@@ -26,36 +25,27 @@ export type SendEmailInput = StepInput & {
 async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
   const { emailTo, emailSubject, emailBody } = input
 
+  // Configuration errors should not be retried
   if (!emailTo) {
-    return {
-      success: false,
-      error: "Send email failed: recipient email (to) is required",
-    }
+    throw new FatalError("Send email failed: recipient email (to) is required")
   }
 
   if (!emailSubject) {
-    return {
-      success: false,
-      error: "Send email failed: subject is required",
-    }
+    throw new FatalError("Send email failed: subject is required")
   }
 
   const apiKey = process.env.INBOUND_API_KEY
   if (!apiKey) {
-    return {
-      success: false,
-      error:
-        "Send email failed: INBOUND_API_KEY environment variable is not configured",
-    }
+    throw new FatalError(
+      "Send email failed: INBOUND_API_KEY environment variable is not configured",
+    )
   }
 
   const fromEmail = process.env.INBOUND_FROM_EMAIL
   if (!fromEmail) {
-    return {
-      success: false,
-      error:
-        "Send email failed: INBOUND_FROM_EMAIL environment variable is not configured",
-    }
+    throw new FatalError(
+      "Send email failed: INBOUND_FROM_EMAIL environment variable is not configured",
+    )
   }
 
   try {
@@ -69,10 +59,7 @@ async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
     })
 
     if (response.error) {
-      return {
-        success: false,
-        error: `Send email failed: ${response.error}`,
-      }
+      throw new FatalError(`Send email failed: ${response.error}`)
     }
 
     return {
@@ -84,6 +71,11 @@ async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
       },
     }
   } catch (error) {
+    // Re-throw FatalErrors as-is
+    if (error instanceof FatalError) {
+      throw error
+    }
+    // Other errors might be transient (network issues, etc.)
     return {
       success: false,
       error: `Send email failed: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -92,15 +84,12 @@ async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
 }
 
 /**
- * Send Email Step with Vercel Workflow support
+ * Send Email Step with Workflow DevKit support
  * Uses "use step" directive for durability and observability
  */
-// eslint-disable-next-line @typescript-eslint/require-await
 export async function sendEmailStep(
   input: SendEmailInput,
 ): Promise<SendEmailResult> {
   "use step"
   return withStepLogging(input, () => sendEmail(input))
 }
-sendEmailStep.maxRetries = 0
-
