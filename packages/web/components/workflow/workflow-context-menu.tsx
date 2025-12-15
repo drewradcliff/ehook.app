@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 import {
   addNodeAtom,
   deleteEdgeAtom,
@@ -8,56 +8,57 @@ import {
   nodesAtom,
   selectedNodeAtom,
   type WorkflowNode,
-} from "@/lib/workflow-store";
-import type { Edge, Node, XYPosition } from "@xyflow/react";
-import { useAtomValue, useSetAtom } from "jotai";
-import { Link2Off, Plus, Trash2 } from "lucide-react";
-import { nanoid } from "nanoid";
-import { useCallback, useEffect, useRef } from "react";
+} from "@/lib/workflow-store"
+import type { Edge, Node, XYPosition } from "@xyflow/react"
+import { useAtomValue, useSetAtom } from "jotai"
+import { Link2Off, Plus, Trash2 } from "lucide-react"
+import { nanoid } from "nanoid"
+import { useCallback, useEffect, useRef } from "react"
+import { Button } from "../ui/button"
 
-export type ContextMenuType = "node" | "edge" | "pane" | null;
+export type ContextMenuType = "node" | "edge" | "pane" | null
 
 export type ContextMenuState = {
-  type: ContextMenuType;
-  position: { x: number; y: number };
-  flowPosition?: XYPosition;
-  nodeId?: string;
-  edgeId?: string;
-} | null;
+  type: ContextMenuType
+  position: { x: number; y: number }
+  flowPosition?: XYPosition
+  nodeId?: string
+  edgeId?: string
+} | null
 
 type WorkflowContextMenuProps = {
-  menuState: ContextMenuState;
-  onClose: () => void;
-};
+  menuState: ContextMenuState
+  onClose: () => void
+}
 
 export function WorkflowContextMenu({
   menuState,
   onClose,
 }: WorkflowContextMenuProps) {
-  const nodes = useAtomValue(nodesAtom);
-  const deleteNode = useSetAtom(deleteNodeAtom);
-  const deleteEdge = useSetAtom(deleteEdgeAtom);
-  const addNode = useSetAtom(addNodeAtom);
-  const setSelectedNode = useSetAtom(selectedNodeAtom);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const nodes = useAtomValue(nodesAtom)
+  const deleteNode = useSetAtom(deleteNodeAtom)
+  const deleteEdge = useSetAtom(deleteEdgeAtom)
+  const addNode = useSetAtom(addNodeAtom)
+  const setSelectedNode = useSetAtom(selectedNodeAtom)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const handleDeleteNode = useCallback(() => {
     if (menuState?.nodeId) {
-      deleteNode(menuState.nodeId);
+      deleteNode(menuState.nodeId)
     }
-    onClose();
-  }, [menuState, deleteNode, onClose]);
+    onClose()
+  }, [menuState, deleteNode, onClose])
 
   const handleDeleteEdge = useCallback(() => {
     if (menuState?.edgeId) {
-      deleteEdge(menuState.edgeId);
+      deleteEdge(menuState.edgeId)
     }
-    onClose();
-  }, [menuState, deleteEdge, onClose]);
+    onClose()
+  }, [menuState, deleteEdge, onClose])
 
   const handleAddStep = useCallback(() => {
     if (menuState?.flowPosition) {
-      const nodeHeight = 192;
+      const nodeHeight = 192
       const newNode: WorkflowNode = {
         id: nanoid(),
         type: "action",
@@ -73,17 +74,17 @@ export function WorkflowContextMenu({
           status: "idle",
         },
         selected: true,
-      };
-      addNode(newNode);
-      setSelectedNode(newNode.id);
+      }
+      addNode(newNode)
+      setSelectedNode(newNode.id)
     }
-    onClose();
-  }, [menuState, addNode, setSelectedNode, onClose]);
+    onClose()
+  }, [menuState, addNode, setSelectedNode, onClose])
 
   // Close menu when clicking outside
   useEffect(() => {
     if (!menuState) {
-      return;
+      return
     }
 
     const handleClickOutside = (event: MouseEvent) => {
@@ -91,50 +92,50 @@ export function WorkflowContextMenu({
         menuRef.current &&
         !menuRef.current.contains(event.target as globalThis.Node)
       ) {
-        onClose();
+        onClose()
       }
-    };
+    }
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose();
+        onClose()
       }
-    };
+    }
 
     // Use a small timeout to prevent the menu from closing immediately
     const timeoutId = setTimeout(() => {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("keydown", handleEscape);
-    }, 0);
+      document.addEventListener("mousedown", handleClickOutside)
+      document.addEventListener("keydown", handleEscape)
+    }, 0)
 
     return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [menuState, onClose]);
+      clearTimeout(timeoutId)
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleEscape)
+    }
+  }, [menuState, onClose])
 
   if (!menuState) {
-    return null;
+    return null
   }
 
   // Check if the node is a trigger (can't be deleted)
   const isTriggerNode = Boolean(
     menuState.nodeId &&
-      nodes.find((n) => n.id === menuState.nodeId)?.data.type === "trigger"
-  );
+      nodes.find((n) => n.id === menuState.nodeId)?.data.type === "trigger",
+  )
 
   const getNodeLabel = () => {
     if (!menuState.nodeId) {
-      return "Step";
+      return "Step"
     }
-    const node = nodes.find((n) => n.id === menuState.nodeId);
-    return node?.data.label || "Step";
-  };
+    const node = nodes.find((n) => n.id === menuState.nodeId)
+    return node?.data.label || "Step"
+  }
 
   return (
     <div
-      className="fade-in-0 zoom-in-95 fixed z-50 min-w-[8rem] animate-in overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+      className="fade-in-0 zoom-in-95 animate-in bg-popover text-popover-foreground fixed z-50 min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-md"
       ref={menuRef}
       style={{
         left: menuState.position.x,
@@ -168,16 +169,16 @@ export function WorkflowContextMenu({
         />
       )}
     </div>
-  );
+  )
 }
 
 type MenuItemProps = {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  variant?: "default" | "destructive";
-  disabled?: boolean;
-};
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
+  variant?: "default" | "destructive"
+  disabled?: boolean
+}
 
 function MenuItem({
   icon,
@@ -187,73 +188,70 @@ function MenuItem({
   disabled,
 }: MenuItemProps) {
   return (
-    <button
+    <Button
+      type="button"
+      variant={variant === "destructive" ? "destructive" : "ghost"}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none",
-        "hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-        variant === "destructive" &&
-          "text-destructive hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive",
-        disabled && "pointer-events-none opacity-50"
+        "w-full justify-start gap-2 px-2 py-1.5 text-sm",
+        disabled && "pointer-events-none opacity-50",
       )}
       disabled={disabled}
       onClick={onClick}
-      type="button"
     >
       {icon}
       {label}
-    </button>
-  );
+    </Button>
+  )
 }
 
 // Hook helpers for using with React Flow
 export function useContextMenuHandlers(
   screenToFlowPosition: (position: { x: number; y: number }) => XYPosition,
-  setMenuState: (state: ContextMenuState) => void
+  setMenuState: (state: ContextMenuState) => void,
 ) {
   const onNodeContextMenu = useCallback(
     (event: React.MouseEvent, node: Node) => {
-      event.preventDefault();
+      event.preventDefault()
       setMenuState({
         type: "node",
         position: { x: event.clientX, y: event.clientY },
         nodeId: node.id,
-      });
+      })
     },
-    [setMenuState]
-  );
+    [setMenuState],
+  )
 
   const onEdgeContextMenu = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
-      event.preventDefault();
+      event.preventDefault()
       setMenuState({
         type: "edge",
         position: { x: event.clientX, y: event.clientY },
         edgeId: edge.id,
-      });
+      })
     },
-    [setMenuState]
-  );
+    [setMenuState],
+  )
 
   const onPaneContextMenu = useCallback(
     (event: React.MouseEvent | MouseEvent) => {
-      event.preventDefault();
+      event.preventDefault()
       const flowPosition = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
-      });
+      })
       setMenuState({
         type: "pane",
         position: { x: event.clientX, y: event.clientY },
         flowPosition,
-      });
+      })
     },
-    [screenToFlowPosition, setMenuState]
-  );
+    [screenToFlowPosition, setMenuState],
+  )
 
   return {
     onNodeContextMenu,
     onEdgeContextMenu,
     onPaneContextMenu,
-  };
+  }
 }
-

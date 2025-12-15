@@ -110,13 +110,21 @@ function processTemplates(
       processedValue = processedValue.replace(
         simpleLabelPattern,
         (match, label, _dotPart, fieldPath) => {
-          // Find output by label (case-insensitive)
-          // Also match by node type (e.g., "Trigger" matches any trigger node)
-          const output = Object.values(outputs).find(
-            (o) =>
-              o.label.toLowerCase() === label.toLowerCase() ||
-              o.nodeType.toLowerCase() === label.toLowerCase(),
+          const outputValues = Object.values(outputs)
+          const lowerLabel = label.toLowerCase()
+
+          // First, search for an exact label match (case-insensitive)
+          let output = outputValues.find(
+            (o) => o.label.toLowerCase() === lowerLabel,
           )
+
+          // If no label match, fall back to nodeType match (case-insensitive)
+          if (!output) {
+            output = outputValues.find(
+              (o) => o.nodeType.toLowerCase() === lowerLabel,
+            )
+          }
+
           if (!output) {
             return match
           }

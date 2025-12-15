@@ -15,6 +15,18 @@ import { Clock, Copy, Play, Webhook } from "lucide-react"
 import { toast } from "sonner"
 import { SchemaBuilder, type SchemaField } from "./schema-builder"
 
+function parseWebhookSchema(schemaString: unknown): SchemaField[] {
+  if (!schemaString || typeof schemaString !== "string") {
+    return []
+  }
+  try {
+    return JSON.parse(schemaString) as SchemaField[]
+  } catch (error) {
+    console.warn("Failed to parse webhookSchema:", error)
+    return []
+  }
+}
+
 type TriggerConfigProps = {
   config: Record<string, unknown>
   onUpdateConfig: (key: string, value: string) => void
@@ -110,13 +122,7 @@ export function TriggerConfig({
               onChange={(schema) =>
                 onUpdateConfig("webhookSchema", JSON.stringify(schema))
               }
-              schema={
-                config?.webhookSchema
-                  ? (JSON.parse(
-                      config.webhookSchema as string,
-                    ) as SchemaField[])
-                  : []
-              }
+              schema={parseWebhookSchema(config?.webhookSchema)}
             />
             <p className="text-muted-foreground text-xs">
               Define the expected structure of the incoming webhook payload.

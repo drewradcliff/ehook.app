@@ -25,7 +25,7 @@ import { useReactFlow } from "@xyflow/react"
 import { useAtom, useSetAtom } from "jotai"
 import { Loader2, Play, Plus, Redo2, Undo2 } from "lucide-react"
 import { nanoid } from "nanoid"
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 import { toast } from "sonner"
 import { Panel } from "../ai-elements/panel"
 import { WorkflowSelector } from "./workflow-selector"
@@ -52,6 +52,16 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
   const setSelectedExecutionId = useSetAtom(selectedExecutionIdAtom)
   const { screenToFlowPosition } = useReactFlow()
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Cleanup polling interval on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current !== null) {
+        clearInterval(pollingIntervalRef.current)
+        pollingIntervalRef.current = null
+      }
+    }
+  }, [])
 
   const handleAddStep = () => {
     // Get the ReactFlow wrapper (the visible canvas container)

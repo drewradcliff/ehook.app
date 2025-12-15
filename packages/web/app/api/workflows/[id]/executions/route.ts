@@ -1,5 +1,5 @@
 import { db } from "@/db"
-import { workflowExecutionLogs, workflowExecutions } from "@/db/schema"
+import { workflowExecutions } from "@/db/schema"
 import { desc, eq } from "drizzle-orm"
 import { NextResponse } from "next/server"
 
@@ -47,22 +47,7 @@ export async function DELETE(
   try {
     const { id: workflowId } = await context.params
 
-    // First delete all logs for executions of this workflow
-    const executions = await db
-      .select({ id: workflowExecutions.id })
-      .from(workflowExecutions)
-      .where(eq(workflowExecutions.workflowId, workflowId))
-
-    const executionIds = executions.map((e) => e.id)
-
-    // Delete logs for each execution
-    for (const executionId of executionIds) {
-      await db
-        .delete(workflowExecutionLogs)
-        .where(eq(workflowExecutionLogs.executionId, executionId))
-    }
-
-    // Delete all executions for this workflow
+    // Delete all executions for this workflow (logs cascade-delete via FK)
     const result = await db
       .delete(workflowExecutions)
       .where(eq(workflowExecutions.workflowId, workflowId))

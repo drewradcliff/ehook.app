@@ -34,9 +34,13 @@ export async function GET(
       .where(eq(workflowExecutionLogs.executionId, executionId))
 
     // Create node statuses map (latest status per node)
-    const nodeStatuses = logs.map((log) => ({
-      nodeId: log.nodeId,
-      status: log.status,
+    const nodeStatusMap = new Map<string, string>()
+    for (const log of logs) {
+      nodeStatusMap.set(log.nodeId, log.status)
+    }
+    const nodeStatuses = Array.from(nodeStatusMap, ([nodeId, status]) => ({
+      nodeId,
+      status,
     }))
 
     return NextResponse.json({
